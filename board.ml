@@ -80,7 +80,7 @@ class board =
 		if toggleClicked then 
 			let x = mouse_x / length - 1 in
 			let y = mouse_y / length - 2 in
-			if (inRange x 0 14 && inRange y 0 14) then 
+			if (inRange x 0 14 && inRange y 0 14 && layout.(x).(y)#isBlank) then 
 				(layout.(x).(y) <- hand1.(savedQ);
 				hand1.(savedQ) <- blank;
 				play <- (x, y):: play;
