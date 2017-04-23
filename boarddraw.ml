@@ -5,8 +5,8 @@
  *)
 open Graphics ;;
 open Printf ;;
-open Board;;
-open Tile;;
+open Board ;;
+open Tile ;;
 
 (*......................................................................
   Configuration 
