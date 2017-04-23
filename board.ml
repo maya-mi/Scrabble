@@ -91,10 +91,10 @@ class board =
 	method mouseClick mouse_x mouse_y= 
 		if dumping then
 			(let q = mouse_y / length - 6 in 
-				if (inRange q 0 7 && inRange mouse_x (cFRAMESIZE - length) cFRAMESIZE) then 
+				if (inRange q 0 6 && inRange mouse_x (cFRAMESIZE - length) cFRAMESIZE) then 
 			 		dumps <- q :: dumps;
 			    	hand1.(q)#click) 
-		else if toggleClicked then 
+		else (if toggleClicked then 
 			let x = mouse_x / length - 1 in
 			let y = mouse_y / length - 2 in
 			if (inRange x 0 14 && inRange y 0 14 && layout.(x).(y)#isBlank) then 
@@ -105,8 +105,8 @@ class board =
 			toggleClicked <- false
 		else 
 			let q = mouse_y / length - 6 in 
-			if (inRange q 0 7 && inRange mouse_x (cFRAMESIZE - length) cFRAMESIZE) then 
-			 (savedQ <- q; toggleClicked <- true)
+			if (inRange q 0 6 && inRange mouse_x (cFRAMESIZE - length) cFRAMESIZE) then 
+			 (savedQ <- q; toggleClicked <- true))
 
 	method addVerts wrd x yMax yMin = 
 		let ypos = ref yMax in  
