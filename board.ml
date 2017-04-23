@@ -33,12 +33,18 @@ class board =
 	val mutable play = []
 	val mutable validPos = false
 	val mutable score1 = 0
-	val mutable turnScore = 0
+	val mutable score2 = 0;
+	val mutable isAI2 = false;
+	val mutable turn = 1;
+	val mutable turnScore = 0	
+	val mutable dumping = false
+	val mutable dumps = []
 
 	method pullTile () = 
 		match drawPile with
 		|[] -> new tile {id = char_of_int 32; score = 0}
 		|hd :: tl -> drawPile <- tl; new tile hd
+
 
 	method drawBoard () = 
 		for i = 0 to 14 do
@@ -49,6 +55,13 @@ class board =
 		Graphics.set_color Graphics.red;
 		layout.(7).(7)#draw 7 7; 
 		Graphics.set_color Graphics.black;
+
+
+	method dump numL =
+		let adds = List.fold_left (fun x y -> let a = hand1.(y) in hand1.(y) <- this#pullTile (); a :: x) [] numL in
+		drawPile <- List.fold_left (fun x y -> y#getLetter :: x) drawPile adds ;
+		drawPile <- shuffle drawPile
+
 
 	method drawHand () = 
 		for i = 0 to 6 do
@@ -77,7 +90,11 @@ class board =
 		(x = 7 && y = 7) || List.length (List.filter (fun x -> not (List.mem x playedTiles || x#isBlank)) !n) > 0 
 
 	method mouseClick mouse_x mouse_y= 
-		if toggleClicked then 
+		if dumping then
+			let q = mouse_y / length - 6 in 
+				if (inRange q 0 7 && inRange mouse_x (cFRAMESIZE - length) cFRAMESIZE) then 
+			 	dumps <- q :: dumps
+		else if toggleClicked then 
 			let x = mouse_x / length - 1 in
 			let y = mouse_y / length - 2 in
 			if (inRange x 0 14 && inRange y 0 14) then 
@@ -201,6 +218,11 @@ class board =
 			if this#is_valid () then this#refresh ()
 			else this#reset ()
 		else if k = 'r' then this#reset ()
+	    else if k = 'd' && dumping then 
+	      (this#dump dumps ;
+	      dumps <- [] ;
+	      dumping <- false )
+	    else if k = 'd' then dumping <- true
 
 	method react (s: Graphics.status) = 
 		if s.keypressed then this#keyParse s.key
