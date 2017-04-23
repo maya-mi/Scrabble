@@ -7,6 +7,7 @@ class tile  ({id; score}: letter) =
  object (this)
  	val mutable ch = id
  	val mutable score = score
+ 	val mutable isClicked = false
  	val mutable x = min_int
  	val mutable y = min_int
 
@@ -19,6 +20,8 @@ class tile  ({id; score}: letter) =
 
  	method isBlank = ch = ' '
 
+ 	method click = isClicked <- (not isClicked)
+
  	method getLetter = {id = this#getid; score = this#getscore}
 
  	method getid  = id
@@ -30,9 +33,11 @@ class tile  ({id; score}: letter) =
  		let edge = (length  - l) / 2 in
  		x <- x0;
  		y <- y0;
+ 		if isClicked then Graphics.set_color Graphics.red ; 
  		Graphics.draw_rect ((x + 1) * length + edge) ((y + 2) * length + edge) l l;
  		Graphics.moveto ((x + 1) * length + length / 2) ((y+ 2) * length + length / 2);
- 		Graphics.draw_char ch
+ 		Graphics.draw_char ch ;
+ 		Graphics.set_color Graphics.black
  		(*Graphics.draw_poly (Array.of_list [((x + 1) * length, (y + 1) * length);
  						   ((x + 1) * length + edge, (y + 1) * length) + edge);
  						   ((x + 1) * length + edge, (y + 2) * length) - edge);

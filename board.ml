@@ -18,7 +18,6 @@ let compare_all tup_lst =
 	let xs, ys = List.split tup_lst in
 	(compare xs, compare ys);;
 
-
 let inRange x l m = 
 	x >= l && x <= m;;
 
@@ -91,9 +90,10 @@ class board =
 
 	method mouseClick mouse_x mouse_y= 
 		if dumping then
-			let q = mouse_y / length - 6 in 
+			(let q = mouse_y / length - 6 in 
 				if (inRange q 0 7 && inRange mouse_x (cFRAMESIZE - length) cFRAMESIZE) then 
-			 	dumps <- q :: dumps
+			 		dumps <- q :: dumps;
+			    	hand1.(q)#click) 
 		else if toggleClicked then 
 			let x = mouse_x / length - 1 in
 			let y = mouse_y / length - 2 in

@@ -9,6 +9,8 @@ class tile : letter -> object
 	method getscore: int
 	method getLetter: letter 
 
+	method click : unit
+
 
 	method draw : int -> int -> unit
 	method init: letter -> unit
