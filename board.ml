@@ -44,16 +44,20 @@ class board =
 		|[] -> new tile {id = char_of_int 32; score = 0}
 		|hd :: tl -> drawPile <- tl; new tile hd
 
+	method drawSetting () = 
+		Graphics.set_color (Graphics.rgb 84 139 84);
+		Graphics.fill_rect 0 0 cFRAMESIZE cFRAMESIZE;
+		Graphics.set_color (Graphics.black);
+		Graphics.draw_string ("Score: " ^ (string_of_int score1));
 
+	
 	method drawBoard () = 
+		this#drawSetting();
 		for i = 0 to 14 do
 			for j = 0 to 14 do 
 				layout.(i).(j)#draw i j;
 			done
 		done;
-		Graphics.set_color Graphics.red;
-		layout.(7).(7)#draw 7 7; 
-		Graphics.set_color Graphics.black;
 
 
 	method dump numL =
@@ -70,7 +74,6 @@ class board =
 
 	method draw () = 
 		Graphics.moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - length);
-		Graphics.draw_string ("Score: " ^ (string_of_int score1));
 		this#drawBoard ();
 		this#drawHand ()
 

@@ -5,6 +5,10 @@ let length = cFRAMESIZE / 18;;
 
 class tile  ({id; score}: letter) = 
  object (this)
+ 	val shadow = Graphics.rgb 222 184 135
+ 	val tile_color = Graphics.rgb 255 239 213 
+ 	val blank_color = Graphics.rgb 205 205 193
+ 	val lines = Graphics.rgb 139 137 112
  	val mutable ch = id
  	val mutable score = score
  	val mutable isClicked = false
@@ -29,19 +33,39 @@ class tile  ({id; score}: letter) =
 
 
  	method draw x0 y0 = 
- 		let l = length * 3 / 4 in
- 		let edge = (length  - l) / 2 in
+ 		let edge = length / 8 in
  		x <- x0;
  		y <- y0;
- 		if isClicked then Graphics.set_color Graphics.red ; 
- 		Graphics.draw_rect ((x + 1) * length + edge) ((y + 2) * length + edge) l l;
- 		Graphics.moveto ((x + 1) * length + length / 2) ((y+ 2) * length + length / 2);
- 		Graphics.draw_char ch ;
- 		Graphics.set_color Graphics.black
- 		(*Graphics.draw_poly (Array.of_list [((x + 1) * length, (y + 1) * length);
- 						   ((x + 1) * length + edge, (y + 1) * length) + edge);
- 						   ((x + 1) * length + edge, (y + 2) * length) - edge);
-						   ((x + 1) * length, (y + 2) * length) - edge)])*)
+ 		let xc = (x + 1) * length in
+ 		let yc = (y + 2) * length in 
+ 		if this#isBlank then (
+ 			Graphics.set_color blank_color; 
+ 			Graphics.fill_rect xc yc length length;
+ 			Graphics.set_color lines;
+ 			Graphics.draw_rect xc yc length length)
+ 		else(
+ 		let l = Array.of_list [(xc, yc); (xc + edge, yc + edge); (xc + edge, yc + length - edge); (xc, yc + length)] in 
+ 		let d = Array.of_list [(xc, yc); (xc + edge, yc + edge); (xc + length - edge, yc + edge); (xc + length, yc)] in 
+ 		let r = Array.of_list [(xc + length, yc); (xc + length - edge, yc + edge); (xc + length - edge, yc + length - edge); (xc + length, yc + length)] in 
+ 		let u = Array.of_list [(xc, yc + length); (xc + length, yc + length); (xc + length - edge, yc + length - edge); (xc + edge, yc + length - edge)] in 
+
+ 		Graphics.set_color tile_color;
+ 		Graphics.fill_rect xc yc length length;
+ 		Graphics.set_color shadow;
+ 		Graphics.fill_poly l;
+ 		Graphics.fill_poly d;
+
+ 		Graphics.draw_poly l;
+ 		Graphics.draw_poly d;
+ 		Graphics.draw_poly r;
+ 		Graphics.draw_poly u;
+ 		Graphics.set_color Graphics.black;
+ 		Graphics.moveto (xc + length / 2) (yc + 3 * edge);
+ 		Graphics.draw_char ch;
+ 		Graphics.moveto (xc + 2 * length / 3) (yc + length / 6);
+ 		Graphics.draw_string (string_of_int score);)
+
+
 						   
  end
 
