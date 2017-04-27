@@ -21,20 +21,20 @@ let compare_all tup_lst =
 let inRange x l m = 
 	x >= l && x <= m;;
 
-class board = 
+class board (players: int) (ais:int) = 
 	object (this)
 
+	val mutable turn = 0
 	val mutable layout = Array.make_matrix 15 15 blank
 	val mutable drawPile = shuffle fullSet
-	val mutable hand1 = Array.make 7 blank
+	val mutable hands = Array.make_matrix players 7 blank
+	val mutable reals = Array.make players false
 	val mutable savedQ = min_int
 	val mutable toggleClicked = false
 	val mutable play = []
 	val mutable validPos = false
 	val mutable score1 = 0
-	val mutable score2 = 0;
-	val mutable isAI2 = false;
-	val mutable turn = 1;
+	val mutable score2 = 0
 	val mutable turnScore = 0	
 	val mutable dumping = false
 	val mutable dumps = []
@@ -49,6 +49,7 @@ class board =
 		Graphics.fill_rect 0 0 cFRAMESIZE cFRAMESIZE;
 		Graphics.set_color (Graphics.black);
 		Graphics.draw_string ("Score: " ^ (string_of_int score1));
+		Graphics.draw_string ("Turn of player " ^ (string_of_int turn));
 
 	
 	method drawBoard () = 
@@ -61,14 +62,14 @@ class board =
 
 
 	method dump numL =
-		let adds = List.fold_left (fun x y -> let a = hand1.(y) in hand1.(y) <- this#pullTile (); a :: x) [] numL in
+		let adds = List.fold_left (fun x y -> let a = hands.(turn).(y) in hands.(turn).(y) <- this#pullTile (); a :: x) [] numL in
 		drawPile <- List.fold_left (fun x y -> y#getLetter :: x) drawPile adds ;
 		drawPile <- shuffle drawPile
 
 
 	method drawHand () = 
 		for i = 0 to 6 do
-			hand1.(i)#draw 16 (i + 4);
+			hands.(turn).(i)#draw 16 (i + 4);
 		done
 
 
@@ -78,9 +79,14 @@ class board =
 		this#drawHand ()
 
 	method init () = 
-		for i = 0 to 6 do 
-			hand1.(i) <- this#pullTile ();
-		done
+		for i = 0 to players - 1 do
+			for j = 0 to 6 do 
+				hands.(i).(j) <- this#pullTile ();
+			done;
+		done;
+		for i = 0 to players - ais - 1 do 
+			reals.(i) <- true;
+		done;
 
 	method validating x y = 
 		let n = ref [] in 
@@ -96,13 +102,13 @@ class board =
 			(let q = mouse_y / length - 6 in 
 				if (inRange q 0 6 && inRange mouse_x (cFRAMESIZE - length) cFRAMESIZE) then 
 			 		dumps <- q :: dumps;
-			    	hand1.(q)#click) 
+			    	hands.(turn).(q)#click) 
 		else (if toggleClicked then 
 			let x = mouse_x / length - 1 in
 			let y = mouse_y / length - 2 in
 			if (inRange x 0 14 && inRange y 0 14 && layout.(x).(y)#isBlank) then 
-				(layout.(x).(y) <- hand1.(savedQ);
-				hand1.(savedQ) <- blank;
+				(layout.(x).(y) <- hands.(turn).(savedQ);
+				hands.(turn).(savedQ) <- blank;
 				play <- (x, y):: play;
 				validPos <- validPos || this#validating x y) else ();
 			toggleClicked <- false
@@ -188,7 +194,7 @@ class board =
 		play <- [];
 		validPos <- false;
 		for i = 0 to 6 do 
-			if hand1.(i)#isBlank then hand1.(i) <- this#pullTile ();
+			if hands.(turn).(i)#isBlank then hands.(turn).(i) <- this#pullTile ();
 		done
 
 	method reset () = 
@@ -199,10 +205,10 @@ class board =
 		play <- [];
 		validPos <- false;
 		for i = 0 to 6 do 
-			if hand1.(i)#isBlank then 
+			if hands.(turn).(i)#isBlank then 
 				match !storage with
 				|[] -> failwith "freakout"
-				|hd :: tl -> hand1.(i) <- hd; storage := tl;
+				|hd :: tl -> hands.(turn).(i) <- hd; storage := tl;
 		done
 (*
 	method reset () = 
