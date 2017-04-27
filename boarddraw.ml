@@ -88,7 +88,7 @@ let listen () =
 
 let listen () = 
 	x11_initialize ();
-	let b = new board 1 0 in 
+	let b = new board 2 0 in 
 	b#init ();
 	b#draw (); 
 	loop_at_exit [Button_down; Key_pressed] (fun s -> clear_graph (); b#react s; b#draw ());;

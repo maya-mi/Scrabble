@@ -24,7 +24,6 @@ let inRange x l m =
 class board (players: int) (ais:int) = 
 	object (this)
 
-	val mutable turn = 0
 	val mutable layout = Array.make_matrix 15 15 blank
 	val mutable drawPile = shuffle fullSet
 	val mutable hands = Array.make_matrix players 7 blank
@@ -34,11 +33,7 @@ class board (players: int) (ais:int) =
 	val mutable play = []
 	val mutable validPos = false
 	val mutable score1 = 0
-<<<<<<< HEAD
-	val mutable turn = 1;
-=======
-	val mutable score2 = 0
->>>>>>> c93e8e6a9f57af47da392bbf3e0abd595e7dca95
+	val mutable turn = 0
 	val mutable turnScore = 0	
 	val mutable dumping = false
 	val mutable dumps = []
