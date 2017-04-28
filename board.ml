@@ -42,7 +42,7 @@ class board (players: int) (ais:int) =
 	val w2s = [(1, 1); (2, 2); (3, 3); (4, 4); (10, 10); (11, 11); (12, 12); (13, 13);
 			   (1, 13); (2, 12); (3, 11); (4, 10); (10, 4); (11, 3); (12, 2); (13, 1)]
 
-(*Note: unclick if not played*)
+(*Note: unclick if not*)
 
 	method pullTile () = 
 		match drawPile with
@@ -130,7 +130,10 @@ class board (players: int) (ais:int) =
 				layout.(x).(y) <- hands.(turn).(savedQ);
 				hands.(turn).(savedQ) <- blank;
 				play <- (x, y):: play;
-				validPos <- validPos || this#validating x y) else ();
+				validPos <- validPos || this#validating x y) 
+			else (for i = 0 to 6 do
+				hands.(turn).(i)#unclick;
+			done);
 			toggleClicked <- false
 		else 
 			let q = mouse_y / length - 6 in 
