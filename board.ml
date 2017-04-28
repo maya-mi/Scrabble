@@ -210,6 +210,7 @@ class board (players: int) (ais:int) =
 			done;
 			this#addVerts wrd (List.hd xs) (listFind max ys) (listFind min ys);
 			turnScore <- turnScore + (this#score !wrd);
+			if List.length play = 7 then turnScore <- turnScore + 50;
 			isWord (this#stripLetters !wrd) && !perp && validPos)
 		else if ySame then 
 			(let wrd = ref [] in 
@@ -221,6 +222,7 @@ class board (players: int) (ais:int) =
 			done;
 			this#addHor wrd (List.hd ys) (listFind max xs) (listFind min xs);
 			turnScore <- turnScore + (this#score !wrd);
+			if List.length play = 7 then turnScore <- turnScore + 50;
 			isWord (this#stripLetters !wrd) && !perp && validPos)
 		else false)
 
