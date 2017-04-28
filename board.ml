@@ -6,6 +6,8 @@ let length = cFRAMESIZE / 18;;
 let blank = new tile {id = char_of_int 32; score = 0};;
 let w2 = (new tile {id = char_of_int 32; score = 0});;
 w2#setWordMult 2;;
+let l2 = (new tile {id = char_of_int 32; score = 0});;
+l2#setLetterMult 2;;
 
 let listFind f lst = 
 	match lst with
@@ -41,8 +43,10 @@ class board (players: int) (ais:int) =
 	val mutable dumps = []
 	val w2s = [(1, 1); (2, 2); (3, 3); (4, 4); (10, 10); (11, 11); (12, 12); (13, 13);
 			   (1, 13); (2, 12); (3, 11); (4, 10); (10, 4); (11, 3); (12, 2); (13, 1)]
-
-(*Note: unclick if not*)
+    val l2s = [(0, 3); (0, 11); (3, 0); (11, 0); (14, 3); (14, 11); (3, 14); (11, 14);
+    		   (6, 6); (8, 8); (8, 6); (6, 8);
+    		   (2, 6); (2, 8); (3, 7); (6, 2); (8, 2); (7, 3);
+    		   (12, 6); (12, 8); (11, 7); (6, 12); (8, 12); (7, 11)]
 
 	method pullTile () = 
 		match drawPile with
@@ -87,6 +91,7 @@ class board (players: int) (ais:int) =
 
 	method init () = 
 		List.iter (fun (x, y) -> layout.(x).(y) <- w2) w2s;
+		List.iter (fun (x, y) -> layout.(x).(y) <- l2) l2s;
 		for i = 0 to players - 1 do
 			for j = 0 to 6 do 
 				hands.(i).(j) <- this#pullTile ();
@@ -125,8 +130,8 @@ class board (players: int) (ais:int) =
 			if (inRange x 0 14 && inRange y 0 14 && layout.(x).(y)#isBlank) then 
 				(let wm = layout.(x).(y)#getWordMult in 
 				if wm <> 1 then hands.(turn).(savedQ)#setWordMult wm;
-				(*let lm = layout.(x).(y)#getLetterMult in 
-				if lm <> 1 then hands.(turn).(savedQ)#setLetterMult wm;*)
+				let lm = layout.(x).(y)#getLetterMult in 
+				if lm <> 1 then hands.(turn).(savedQ)#setLetterMult lm;
 				layout.(x).(y) <- hands.(turn).(savedQ);
 				hands.(turn).(savedQ) <- blank;
 				play <- (x, y):: play;
@@ -226,6 +231,7 @@ class board (players: int) (ais:int) =
 		scores.(turn) <- scores.(turn) + turnScore;
 		turnScore <- 0;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
+		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- l2) l2s;
 		List.iter (fun (x, y) -> layout.(x).(y)#unclick; layout.(x).(y)#setWordMult 1;
 		 layout.(x).(y)#setLetterMult 1 ) play;
 		play <- [];
@@ -238,6 +244,7 @@ class board (players: int) (ais:int) =
 		dumping <- false;
 		turnScore <- 0;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
+		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- l2) l2s;
 		let storage = ref [] in 
 		List.iter (fun (x, y) -> storage := layout.(x).(y) :: !storage;
 								 layout.(x).(y) <- blank) play;

@@ -48,7 +48,9 @@ class tile  ({id; score}: letter) =
  		let yc = (y + 2) * length in 
  		if this#isBlank then (
  			Graphics.set_color blank_color; 
+ 			if x = 7 && y = 7 then Graphics.set_color Graphics.magenta;
  			if wordMultiplier = 2 then Graphics.set_color Graphics.red;
+ 			if letterMultiplier = 2 then Graphics.set_color Graphics.blue; 
  			Graphics.fill_rect xc yc length length;
  			Graphics.set_color lines;
  			Graphics.draw_rect xc yc length length)
