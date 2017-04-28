@@ -32,10 +32,13 @@ class tile  ({id; score}: letter) =
  	method getLetter = {id = this#getid; score = this#getscore}
 
  	method getid  = id
- 	method getscore = score
+ 	method getscore = score * letterMultiplier
 
  	method setWordMult x = wordMultiplier <- x
  	method getWordMult = wordMultiplier
+
+ 	method setLetterMult x = letterMultiplier <- x
+ 	method getLetterMult = letterMultiplier
 
  	method draw x0 y0 = 
  		let edge = length / 8 in

@@ -14,9 +14,9 @@ class tile : letter -> object
 
 	method setWordMult: int -> unit
 	method getWordMult: int
-(*
+
 	method setLetterMult: int -> unit
-	method getLetterMult: int*)
+	method getLetterMult: int
 
 	method draw : int -> int -> unit
 	method init: letter -> unit

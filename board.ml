@@ -42,6 +42,7 @@ class board (players: int) (ais:int) =
 	val w2s = [(1, 1); (2, 2); (3, 3); (4, 4); (10, 10); (11, 11); (12, 12); (13, 13);
 			   (1, 13); (2, 12); (3, 11); (4, 10); (10, 4); (11, 3); (12, 2); (13, 1)]
 
+(*Note: unclick if not played*)
 
 	method pullTile () = 
 		match drawPile with
@@ -139,12 +140,12 @@ class board (players: int) (ais:int) =
 	method addVerts wrd x yMax yMin = 
 		let ypos = ref yMax in  
 		while !ypos < 14 && not layout.(x).(!ypos + 1)#isBlank do
-			wrd := layout.(x).(!ypos + 1)#getLetter :: !wrd;
+			wrd := layout.(x).(!ypos + 1) :: !wrd;
 			ypos := !ypos + 1;
 		done;
 		ypos := yMin;
 		while !ypos > 0 && not layout.(x).(!ypos - 1)#isBlank do
-			wrd := !wrd @ [layout.(x).(!ypos - 1)#getLetter];
+			wrd := !wrd @ [layout.(x).(!ypos - 1)];
 			ypos := !ypos - 1;
 		done;
 		
@@ -152,27 +153,36 @@ class board (players: int) (ais:int) =
 	method addHor wrd y xMax xMin = 
 		let xpos = ref xMax in  
 		while !xpos < 14 && not layout.(!xpos + 1).(y)#isBlank do
-			wrd := !wrd @ [layout.(!xpos + 1).(y)#getLetter];
+			wrd := !wrd @ [layout.(!xpos + 1).(y)];
 			xpos := !xpos + 1;
 		done;
 		xpos := xMin;
 		while !xpos > 0 && not layout.(!xpos - 1).(y)#isBlank do
-			wrd := layout.(!xpos - 1).(y)#getLetter :: !wrd;
+			wrd := layout.(!xpos - 1).(y) :: !wrd;
 			xpos := !xpos - 1;
 		done;
 	
 	method vertNormal x y = 
-		let wrd = ref [layout.(x).(y)#getLetter] in 
+		let wrd = ref [layout.(x).(y)] in 
 		this#addVerts wrd x y y;
-		if isWord !wrd then (turnScore <- turnScore + (getScore !wrd); true)
+		if isWord (this#stripLetters !wrd) then (turnScore <- turnScore + (this#score !wrd); true)
 		else List.length !wrd = 1 
 
 	method horNormal x y = 
-		let wrd = ref [layout.(x).(y)#getLetter] in 
+		let wrd = ref [layout.(x).(y)] in 
 		this#addHor wrd y x x;
-		if isWord !wrd then (turnScore <- turnScore + (getScore !wrd); true)
+		if isWord (this#stripLetters !wrd) then (turnScore <- turnScore + (this#score !wrd); true)
 		else List.length !wrd = 1 
 		
+	method score (tls: tile list) = 
+	 let rec help tls scr mult = 
+		match tls with 
+		|[] -> scr * mult
+		|hd::tl -> help tl (scr + hd#getscore) (mult * hd#getWordMult) in 
+	help tls 0 1
+
+	method stripLetters (tls: tile list) = 
+	 List.map (fun t -> t#getLetter) tls
 	
 	method is_valid () = 
 	  let xs, ys = List.split play in
@@ -186,24 +196,24 @@ class board (players: int) (ais:int) =
 			(let wrd = ref [] in 
 			let perp = ref true in 
 			for i = (listFind min ys) to (listFind max ys) do
-				wrd := layout.(List.hd xs).(i)#getLetter :: !wrd;
+				wrd := layout.(List.hd xs).(i) :: !wrd;
 				if List.mem ((List.hd xs), i) play then 
 					(perp := !perp && this#horNormal (List.hd xs) i;)
 			done;
 			this#addVerts wrd (List.hd xs) (listFind max ys) (listFind min ys);
-			turnScore <- turnScore + (getScore !wrd);
-			isWord !wrd && !perp && validPos)
+			turnScore <- turnScore + (this#score !wrd);
+			isWord (this#stripLetters !wrd) && !perp && validPos)
 		else if ySame then 
 			(let wrd = ref [] in 
 			let perp = ref true in 
 			for i = (listFind min xs) to (listFind max xs) do
-				wrd := !wrd @ [layout.(i).(List.hd ys)#getLetter];
+				wrd := !wrd @ [layout.(i).(List.hd ys)];
 				if List.mem (i, (List.hd ys)) play then 
 					(perp := !perp && this#vertNormal i (List.hd ys);)
 			done;
 			this#addHor wrd (List.hd ys) (listFind max xs) (listFind min xs);
-			turnScore <- turnScore + (getScore !wrd);
-			isWord !wrd && !perp && validPos)
+			turnScore <- turnScore + (this#score !wrd);
+			isWord (this#stripLetters !wrd) && !perp && validPos)
 		else false)
 
 
@@ -213,7 +223,8 @@ class board (players: int) (ais:int) =
 		scores.(turn) <- scores.(turn) + turnScore;
 		turnScore <- 0;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
-		List.iter (fun (x, y) -> layout.(x).(y)#unclick) play;
+		List.iter (fun (x, y) -> layout.(x).(y)#unclick; layout.(x).(y)#setWordMult 1;
+		 layout.(x).(y)#setLetterMult 1 ) play;
 		play <- [];
 		validPos <- false;
 		for i = 0 to 6 do 
@@ -236,6 +247,8 @@ class board (players: int) (ais:int) =
 				|hd :: tl -> hands.(turn).(i) <- hd; storage := tl;
 			else ();
 			hands.(turn).(i)#unclick;
+			hands.(turn).(i)#setWordMult 1;
+			hands.(turn).(i)#setLetterMult 1;
 		done	
 		
 	
