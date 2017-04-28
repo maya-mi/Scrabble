@@ -32,7 +32,7 @@ class board (players: int) (ais:int) =
 	val mutable toggleClicked = false
 	val mutable play = []
 	val mutable validPos = false
-	val mutable score1 = 0
+	val mutable scores = Array.make players 0
 	val mutable turn = 0
 	val mutable turnScore = 0	
 	val mutable dumping = false
@@ -47,8 +47,10 @@ class board (players: int) (ais:int) =
 		Graphics.set_color (Graphics.rgb 84 139 84);
 		Graphics.fill_rect 0 0 cFRAMESIZE cFRAMESIZE;
 		Graphics.set_color (Graphics.black);
-		Graphics.draw_string ("Score: " ^ (string_of_int score1));
-		Graphics.draw_string ("Turn of player " ^ (string_of_int turn));
+		Graphics.moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - length);
+		Graphics.draw_string ("SCORE: " ^ (string_of_int scores.(turn)));
+		Graphics.moveto (cFRAMESIZE - 3 * length) (cFRAMESIZE - length/2);
+		Graphics.draw_string ("PLAYER " ^ (string_of_int (1 + turn)) ^ "'S TURN");
 
 	
 	method drawBoard () = 
@@ -73,7 +75,6 @@ class board (players: int) (ais:int) =
 
 
 	method draw () = 
-		Graphics.moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - length);
 		this#drawBoard ();
 		this#drawHand ()
 
@@ -86,6 +87,14 @@ class board (players: int) (ais:int) =
 		for i = 0 to players - ais - 1 do 
 			reals.(i) <- true;
 		done;
+
+	method playAI () = ()
+
+	method advanceTurn () = 
+	 let rec help () = 
+		turn <- (turn + 1) mod (players);
+		if not reals.(turn) then (this#playAI (); help ()); in 
+	 help ()
 
 	method validating x y = 
 		let n = ref [] in 
@@ -188,7 +197,9 @@ class board (players: int) (ais:int) =
 
 
 	method refresh () = 
-		score1 <- score1 + turnScore;
+		 dumps <- [] ;
+	     dumping <- false;
+		scores.(turn) <- scores.(turn) + turnScore;
 		turnScore <- 0;
 		play <- [];
 		validPos <- false;
@@ -197,6 +208,7 @@ class board (players: int) (ais:int) =
 		done
 
 	method reset () = 
+		dumping <- false;
 		turnScore <- 0;
 		let storage = ref [] in 
 		List.iter (fun (x, y) -> storage := layout.(x).(y) :: !storage;
@@ -223,13 +235,13 @@ class board (players: int) (ais:int) =
 	
 	method keyParse k = 
 		if k = ' ' then 
-			if this#is_valid () then this#refresh ()
+			if this#is_valid () then (this#refresh (); this#advanceTurn ();)
 			else this#reset ()
 		else if k = 'r' then this#reset ()
 	    else if k = 'd' && dumping then 
 	      (this#dump dumps ;
-	      dumps <- [] ;
-	      dumping <- false )
+	      this#refresh ();
+	  	  this#advanceTurn ())
 	    else if k = 'd' then dumping <- true
 
 	method react (s: Graphics.status) = 
