@@ -4,6 +4,8 @@ open Words;;
 let cFRAMESIZE = 750;;
 let length = cFRAMESIZE / 18;;
 let blank = new tile {id = char_of_int 32; score = 0};;
+let w2 = (new tile {id = char_of_int 32; score = 0});;
+w2#setWordMult 2;;
 
 let listFind f lst = 
 	match lst with
@@ -37,6 +39,9 @@ class board (players: int) (ais:int) =
 	val mutable turnScore = 0	
 	val mutable dumping = false
 	val mutable dumps = []
+	val w2s = [(1, 1); (2, 2); (3, 3); (4, 4); (10, 10); (11, 11); (12, 12); (13, 13);
+			   (1, 13); (2, 12); (3, 11); (4, 10); (10, 4); (11, 3); (12, 2); (13, 1)]
+
 
 	method pullTile () = 
 		match drawPile with
@@ -80,6 +85,7 @@ class board (players: int) (ais:int) =
 		this#drawHand ()
 
 	method init () = 
+		List.iter (fun (x, y) -> layout.(x).(y) <- w2) w2s;
 		for i = 0 to players - 1 do
 			for j = 0 to 6 do 
 				hands.(i).(j) <- this#pullTile ();
@@ -116,7 +122,11 @@ class board (players: int) (ais:int) =
 			let x = mouse_x / length - 1 in
 			let y = mouse_y / length - 2 in
 			if (inRange x 0 14 && inRange y 0 14 && layout.(x).(y)#isBlank) then 
-				(layout.(x).(y) <- hands.(turn).(savedQ);
+				(let wm = layout.(x).(y)#getWordMult in 
+				if wm <> 1 then hands.(turn).(savedQ)#setWordMult wm;
+				(*let lm = layout.(x).(y)#getLetterMult in 
+				if lm <> 1 then hands.(turn).(savedQ)#setLetterMult wm;*)
+				layout.(x).(y) <- hands.(turn).(savedQ);
 				hands.(turn).(savedQ) <- blank;
 				play <- (x, y):: play;
 				validPos <- validPos || this#validating x y) else ();
@@ -202,6 +212,7 @@ class board (players: int) (ais:int) =
 	     dumping <- false;
 		scores.(turn) <- scores.(turn) + turnScore;
 		turnScore <- 0;
+		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
 		List.iter (fun (x, y) -> layout.(x).(y)#unclick) play;
 		play <- [];
 		validPos <- false;
@@ -212,6 +223,7 @@ class board (players: int) (ais:int) =
 	method reset () = 
 		dumping <- false;
 		turnScore <- 0;
+		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
 		let storage = ref [] in 
 		List.iter (fun (x, y) -> storage := layout.(x).(y) :: !storage;
 								 layout.(x).(y) <- blank) play;
@@ -224,17 +236,7 @@ class board (players: int) (ais:int) =
 				|hd :: tl -> hands.(turn).(i) <- hd; storage := tl;
 			else ();
 			hands.(turn).(i)#unclick;
-		done
-(*
-	method reset () = 
-		for i = 0 to 6 do 
-			if hand1.(i)#isBlank then 
-				match play with
-				|[] -> failwith "freakout"
-				|(x, y) :: tl -> hand1.(i) <- layout.(x).(y); play <- tl @ [(x, y)];
-		done;
-		List.iter (fun (x, y) -> layout.(x).(y) <- blank) play;
-*)		
+		done	
 		
 	
 	method keyParse k = 

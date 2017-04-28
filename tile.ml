@@ -14,6 +14,8 @@ class tile  ({id; score}: letter) =
  	val mutable isClicked = false
  	val mutable x = min_int
  	val mutable y = min_int
+ 	val mutable wordMultiplier = 1
+ 	val mutable letterMultiplier = 1
 
  	method init {id; score = n} : unit = 
  		ch <- id;
@@ -32,6 +34,8 @@ class tile  ({id; score}: letter) =
  	method getid  = id
  	method getscore = score
 
+ 	method setWordMult x = wordMultiplier <- x
+ 	method getWordMult = wordMultiplier
 
  	method draw x0 y0 = 
  		let edge = length / 8 in
@@ -41,6 +45,7 @@ class tile  ({id; score}: letter) =
  		let yc = (y + 2) * length in 
  		if this#isBlank then (
  			Graphics.set_color blank_color; 
+ 			if wordMultiplier = 2 then Graphics.set_color Graphics.red;
  			Graphics.fill_rect xc yc length length;
  			Graphics.set_color lines;
  			Graphics.draw_rect xc yc length length)
