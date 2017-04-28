@@ -245,12 +245,12 @@ class board (players: int) (ais:int) =
 	method reset () = 
 		dumping <- false;
 		turnScore <- 0;
-		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
-		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- l2) l2s;
 		let storage = ref [] in 
 		List.iter (fun (x, y) -> storage := layout.(x).(y) :: !storage;
 								 layout.(x).(y) <- blank) play;
 		play <- [];
+		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
+		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- l2) l2s;
 		validPos <- false;
 		for i = 0 to 6 do 
 			if hands.(turn).(i)#isBlank then 
@@ -274,6 +274,7 @@ class board (players: int) (ais:int) =
 	      this#refresh ();
 	  	  this#advanceTurn ())
 	    else if k = 'd' then dumping <- true
+	 	else if k = 'p' then this#reset (); this#advanceTurn ()
 
 	method react (s: Graphics.status) = 
 		if s.keypressed then this#keyParse s.key
