@@ -65,7 +65,8 @@ class board (players: int) (ais:int) =
 	method dump numL =
 		let adds = List.fold_left (fun x y -> let a = hands.(turn).(y) in hands.(turn).(y) <- this#pullTile (); a :: x) [] numL in
 		drawPile <- List.fold_left (fun x y -> y#getLetter :: x) drawPile adds ;
-		drawPile <- shuffle drawPile
+		drawPile <- shuffle drawPile;
+		this#reset ();
 
 
 	method drawHand () = 
@@ -123,7 +124,7 @@ class board (players: int) (ais:int) =
 		else 
 			let q = mouse_y / length - 6 in 
 			if (inRange q 0 6 && inRange mouse_x (cFRAMESIZE - length) cFRAMESIZE) then 
-			 (savedQ <- q; toggleClicked <- true))
+			 (hands.(turn).(q)#click; savedQ <- q; toggleClicked <- true))
 
 	method addVerts wrd x yMax yMin = 
 		let ypos = ref yMax in  
@@ -201,6 +202,7 @@ class board (players: int) (ais:int) =
 	     dumping <- false;
 		scores.(turn) <- scores.(turn) + turnScore;
 		turnScore <- 0;
+		List.iter (fun (x, y) -> layout.(x).(y)#unclick) play;
 		play <- [];
 		validPos <- false;
 		for i = 0 to 6 do 
@@ -220,6 +222,8 @@ class board (players: int) (ais:int) =
 				match !storage with
 				|[] -> failwith "freakout"
 				|hd :: tl -> hands.(turn).(i) <- hd; storage := tl;
+			else ();
+			hands.(turn).(i)#unclick;
 		done
 (*
 	method reset () = 

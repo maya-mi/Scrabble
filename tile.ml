@@ -24,7 +24,8 @@ class tile  ({id; score}: letter) =
 
  	method isBlank = ch = ' '
 
- 	method click = isClicked <- (not isClicked)
+ 	method click = isClicked <- true
+ 	method unclick = isClicked <- false
 
  	method getLetter = {id = this#getid; score = this#getscore}
 
@@ -59,7 +60,7 @@ class tile  ({id; score}: letter) =
  		Graphics.draw_poly d;
  		Graphics.draw_poly r;
  		Graphics.draw_poly u;
- 		Graphics.set_color Graphics.black;
+ 		if isClicked then Graphics.set_color Graphics.red else Graphics.set_color Graphics.black;
  		Graphics.moveto (xc + length / 2) (yc + 3 * edge);
  		Graphics.draw_char ch;
  		Graphics.moveto (xc + 2 * length / 3) (yc + length / 6);

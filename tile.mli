@@ -10,7 +10,7 @@ class tile : letter -> object
 	method getLetter: letter 
 
 	method click : unit
-
+	method unclick : unit
 
 	method draw : int -> int -> unit
 	method init: letter -> unit
