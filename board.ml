@@ -172,8 +172,8 @@ class board (players: int) (ais:int) =
 		this#addHor wrd y x x;
 		if isWord !wrd then (turnScore <- turnScore + (getScore !wrd); true)
 		else List.length !wrd = 1 
-
-
+		
+	
 	method is_valid () = 
 	  let xs, ys = List.split play in
 	  if List.length play = 1 then 
