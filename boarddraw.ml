@@ -49,40 +49,34 @@ let x11_initialize () =
   G.set_color G.black;
   G.set_text_size 300;
   G.moveto (windowSize / 3) (3 * windowSize / 4) ;
-  G.draw_string "Welcome to Scrabble. Enter number of players: [0-4]";
+  G.draw_string "Welcome to Scrabble. Enter number of players: [1-4]";
   let rec player_loop () = 
     try 
       (let k = int_of_string (Char.escaped (G.read_key ())) in 
-      if k > 0 && k < 5 then k else (G.draw_string "Invalid"; player_loop ());)
-    with Failure "int_of_string" -> (display_message "Invalid"; player_loop ()); in 
+      if k > 0 && k < 5 then k else player_loop ();)
+    with Failure "int_of_string" -> player_loop (); in 
   let p = player_loop () in 
   G.moveto (windowSize / 3) (2 * windowSize / 3);
   G.draw_string ((string_of_int p) ^ " players selected.");
-  G.moveto (windowSize / 3) (windowSize / 2);
+  if p = 1 then (G.draw_string " 0 AI assigned"; delay 3.; (1, 0)) else
+  (G.moveto (windowSize / 3) (windowSize / 2);
   G.draw_string ("Enter number of AI: [0-" ^ (string_of_int (p - 1)) ^ "]");
   let rec ai_loop () = 
     try 
       (let k = int_of_string (Char.escaped (G.read_key ())) in 
-      if k >= 0 && k < p then k else (G.draw_string "Invalid"; ai_loop ());)
-    with Failure "int_of_string" -> (display_message "Invalid"; ai_loop ()); in 
+      if k >= 0 && k < p then k else ai_loop ();)
+    with Failure "int_of_string" -> ai_loop (); in 
   let a = ai_loop () in 
   G.moveto (windowSize / 3) (5 * windowSize / 12);
   G.draw_string ((string_of_int a) ^ " AI selected.");
   delay 3.;
-  (p, a);;
+  (p, a));;
 
  
   (* turn off auto synchronizing; we'll handle double buffer
      synchronization ourselves *)
 
-
-
-let x11_finalize () =
-  (* Close the window on keystroke *)
-  ignore (G.read_key ()) ;;
-
-
-exception End;;  
+ 
 
 
 

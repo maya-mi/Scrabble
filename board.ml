@@ -275,6 +275,7 @@ class board (players: int) (ais:int) =
 	  	  this#advanceTurn ())
 	    else if k = 'd' then dumping <- true
 	 	else if k = 'p' then (this#reset (); this#advanceTurn ())
+	 	else if k = 'x' then raise Exit
 
 	method react (s: Graphics.status) = 
 		if s.keypressed then this#keyParse s.key
