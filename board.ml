@@ -38,6 +38,7 @@ class board (players: int) (ais:int) =
 	val mutable validPos = false
 	val mutable scores = Array.make players 0
 	val mutable turn = 0
+	val mutable passes = 0
 	val mutable turnScore = 0	
 	val mutable dumping = false
 	val mutable dumps = []
@@ -50,7 +51,7 @@ class board (players: int) (ais:int) =
 
 	method pullTile () = 
 		match drawPile with
-		|[] -> new tile {id = char_of_int 32; score = 0}
+		|[] -> blank
 		|hd :: tl -> drawPile <- tl; new tile hd
 
 	method drawSetting () = 
@@ -142,7 +143,7 @@ class board (players: int) (ais:int) =
 			toggleClicked <- false
 		else 
 			let q = mouse_y / length - 6 in 
-			if (inRange q 0 6 && inRange mouse_x (cFRAMESIZE - length) cFRAMESIZE) then 
+			if (inRange q 0 6 && inRange mouse_x (cFRAMESIZE - length) cFRAMESIZE && not hands.(turn).(q)#isBlank) then 
 			 (hands.(turn).(q)#click; savedQ <- q; toggleClicked <- true))
 
 	method addVerts wrd x yMax yMin = 
@@ -228,8 +229,9 @@ class board (players: int) (ais:int) =
 
 
 	method refresh () = 
-		 dumps <- [] ;
-	     dumping <- false;
+		passes <- 0;
+		dumps <- [];
+	    dumping <- false;
 		scores.(turn) <- scores.(turn) + turnScore;
 		turnScore <- 0;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
@@ -242,6 +244,29 @@ class board (players: int) (ais:int) =
 			if hands.(turn).(i)#isBlank then hands.(turn).(i) <- this#pullTile ();
 		done
 
+	method endGame (winner: int) =
+		let playerMinus = ref 0 in 
+		let winnerBonus = ref 0 in 
+		for i = 0 to players - 1 do
+			for j = 0 to 6 do
+				playerMinus := !playerMinus + hands.(i).(j)#getscore
+			done;
+			winnerBonus := !winnerBonus + !playerMinus;
+			scores.(i) <- scores.(i) - !playerMinus;
+			playerMinus := 0;
+		done;
+		scores.(winner) <- scores.(winner) + !winnerBonus
+
+
+	method findWinner () = 
+		let runningMax = ref 0 in
+		let maxPos = ref 0 in
+		for i = 0 to players - 1 do
+			if scores.(i) > !runningMax then (runningMax := scores.(i); maxPos := i)
+		done;
+		!maxPos
+
+	
 	method reset () = 
 		dumping <- false;
 		turnScore <- 0;
@@ -255,7 +280,7 @@ class board (players: int) (ais:int) =
 		for i = 0 to 6 do 
 			if hands.(turn).(i)#isBlank then 
 				match !storage with
-				|[] -> failwith "freakout"
+				|[] -> ();
 				|hd :: tl -> hands.(turn).(i) <- hd; storage := tl;
 			else ();
 			hands.(turn).(i)#unclick;
@@ -274,7 +299,10 @@ class board (players: int) (ais:int) =
 	      this#refresh ();
 	  	  this#advanceTurn ())
 	    else if k = 'd' then dumping <- true
-	 	else if k = 'p' then (this#reset (); this#advanceTurn ())
+	 	else if k = 'p' then (
+	 		passes <- passes + 1; 
+	 		if passes = players then this#endGame (this#findWinner ())
+	 		else (this#reset (); this#advanceTurn ());)
 	 	else if k = 'x' then raise Exit
 
 	method react (s: Graphics.status) = 
