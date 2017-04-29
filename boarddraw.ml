@@ -7,20 +7,15 @@ open Graphics ;;
 open Printf ;;
 open Board ;;
 open Tile ;;
+module G = Graphics ;;
 
 (*......................................................................
   Configuration 
  *)
   
-(* Minimum time between displaying successive frames *)
-let cFRAMEDELAY = 1. /. 1000. ;;
-(* Macimum number of frames (time steps) before giving up on reaching
-   quiescence *)
-let cMAXFRAMES = 2000 ;;
 
-let cSTEPPING = ref false ;;
 let windowSize = 750;;
-
+let grn = G.rgb 84 139 84;;
 
 
 
@@ -29,23 +24,52 @@ let windowSize = 750;;
   graphics support
  *)
 
-module G = Graphics ;;
+
 
 let rec delay (sec: float) : unit =
   try ignore(Thread.delay sec)
   with Unix.Unix_error _ -> delay sec
 
-let framedelay () = delay cFRAMEDELAY ;;
+
+let display_message msg = 
+  G.moveto (windowSize / 2) (windowSize / 2) ;
+  G.set_color G.black;
+  G.draw_string msg;
+  delay 3.;
+  let (x, y) = G.text_size msg in 
+  G.set_color grn;
+  G.fill_rect (windowSize / 2) (windowSize / 2) x y;;
 
 let x11_initialize () =
   (* open a graphics window to draw into and size it appropriately *)
   G.open_graph "";
   G.resize_window windowSize windowSize;
-  G.draw_rect 0 0 windowSize windowSize;
-  G.moveto (windowSize / 2) (windowSize / 2) ;
-  G.draw_string "Welcome to Scrabble.";
-  G.draw_string "Enter number of players: [0-4]";
-  delay 3.;;
+  G.set_color grn;
+  G.fill_rect 0 0 windowSize windowSize;
+  G.set_color G.black;
+  G.set_text_size 300;
+  G.moveto (windowSize / 3) (3 * windowSize / 4) ;
+  G.draw_string "Welcome to Scrabble. Enter number of players: [0-4]";
+  let rec player_loop () = 
+    try 
+      (let k = int_of_string (Char.escaped (G.read_key ())) in 
+      if k > 0 && k < 5 then k else (G.draw_string "Invalid"; player_loop ());)
+    with Failure "int_of_string" -> (display_message "Invalid"; player_loop ()); in 
+  let p = player_loop () in 
+  G.moveto (windowSize / 3) (2 * windowSize / 3);
+  G.draw_string ((string_of_int p) ^ " players selected.");
+  G.moveto (windowSize / 3) (windowSize / 2);
+  G.draw_string ("Enter number of AI: [0-" ^ (string_of_int (p - 1)) ^ "]");
+  let rec ai_loop () = 
+    try 
+      (let k = int_of_string (Char.escaped (G.read_key ())) in 
+      if k >= 0 && k < p then k else (G.draw_string "Invalid"; ai_loop ());)
+    with Failure "int_of_string" -> (display_message "Invalid"; ai_loop ()); in 
+  let a = ai_loop () in 
+  G.moveto (windowSize / 3) (5 * windowSize / 12);
+  G.draw_string ((string_of_int a) ^ " AI selected.");
+  delay 3.;
+  (p, a);;
 
  
   (* turn off auto synchronizing; we'll handle double buffer
@@ -94,8 +118,8 @@ let listen () =
 	x11_finalize ();;*)
 
 let listen () = 
-	x11_initialize ();
-	let b = new board 2 0 in 
+	let (p, a) = x11_initialize () in 
+	let b = new board p a in 
 	b#init ();
 	b#draw (); 
 	loop_at_exit [Button_down; Key_pressed] (fun s -> clear_graph (); b#react s; b#draw ());;
