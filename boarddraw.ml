@@ -40,7 +40,14 @@ let framedelay () = delay cFRAMEDELAY ;;
 let x11_initialize () =
   (* open a graphics window to draw into and size it appropriately *)
   G.open_graph "";
-  G.resize_window windowSize windowSize;;
+  G.resize_window windowSize windowSize;
+  G.draw_rect 0 0 windowSize windowSize;
+  G.moveto (windowSize / 2) (windowSize / 2) ;
+  G.draw_string "Welcome to Scrabble.";
+  G.draw_string "Enter number of players: [0-4]";
+  delay 3.;;
+
+ 
   (* turn off auto synchronizing; we'll handle double buffer
      synchronization ourselves *)
 
