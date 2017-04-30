@@ -113,24 +113,24 @@ class board (players: int) (ais:int) =
 	  	  if this#validating x y then
 	  	  let rec testMove (order : int list) (posX : int) (posY : int) : unit =
 	  	  	if posX >= 15 then (if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
-	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- [])
+	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []) else
 	  	    match order with
 	  	    | [] -> if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
 	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []
-	  	    | h :: t -> if h == 0 then (if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
+	  	    | h :: t -> if h == 7 then (if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
 	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []) 
-	  	    else if layout.(posX).(posY)#isBlank then testMove order (posX + 1) posY else
+	  	    else if not layout.(posX).(posY)#isBlank then testMove order (posX + 1) posY else
 	  	   	  layout.(posX).(posY) <- posHand.(h); play <- (posX, posY) :: play; 
 	  	      testMove t (posX +1) posY
 	  	  in
 	  	  List.iter (fun cur -> testMove cur x y) perms
 	  	done;
 	  done;
-	  (*let rec putBack (perm : int list) poses : unit = 
+	  let rec putBack (perm : int list) poses : unit = 
 	  	match perm, poses with
 	  	| ([], []) -> ()
 	  	| h :: t, (x,y) :: t1 -> layout.(x).(y) <- posHand.(h); putBack t t1
-	  in putBack !bPerm !best*)
+	  in putBack !bPerm !best
 
 
 
