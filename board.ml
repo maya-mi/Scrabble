@@ -117,9 +117,9 @@ class board (players: int) (ais:int) =
 	  	    match order with
 	  	    | [] -> if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
 	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []
-	  	    | h :: t -> if h == 0 then (if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
+	  	    | h :: t -> if h == 7 then (if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
 	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []) 
-	  	    else if layout.(posX).(posY)#isBlank then testMove order (posX + 1) posY else
+	  	    else if not layout.(posX).(posY)#isBlank then testMove order (posX + 1) posY else
 	  	   	  layout.(posX).(posY) <- posHand.(h); play <- (posX, posY) :: play; 
 	  	      testMove t (posX +1) posY
 	  	  in
