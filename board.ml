@@ -36,7 +36,7 @@ class board (players: int) (ais:int) =
 	val mutable savedQ = min_int
 	val mutable toggleClicked = false
 	val mutable play = []
-	val perms = standPerm 7
+	val perms = standPerm 8
 	val mutable validPos = false
 	val mutable scores = Array.make players 0
 	val mutable turn = 0
@@ -108,14 +108,18 @@ class board (players: int) (ais:int) =
 	  let best = ref [] in
 	  let bPerm = ref [] in
 	  let bScore = ref 0 in
-	  for x = 0 to 15 do
-	  	for y = 0 to 15 do
+	  for x = 0 to 14 do
+	  	for y = 0 to 14 do
 	  	  if this#validating x y then
 	  	  let rec testMove (order : int list) (posX : int) (posY : int) : unit =
+	  	  	if posX >= 15 then (if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
+	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- [])
 	  	    match order with
 	  	    | [] -> if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
 	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []
-	  	    | h :: t -> if layout.(posX).(posY)#isBlank then testMove order (posX + 1) posY else
+	  	    | h :: t -> if h == 0 then (if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
+	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []) 
+	  	    else if layout.(posX).(posY)#isBlank then testMove order (posX + 1) posY else
 	  	   	  layout.(posX).(posY) <- posHand.(h); play <- (posX, posY) :: play; 
 	  	      testMove t (posX +1) posY
 	  	  in
