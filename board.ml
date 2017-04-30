@@ -126,11 +126,11 @@ class board (players: int) (ais:int) =
 	  	  List.iter (fun cur -> testMove cur x y) perms
 	  	done;
 	  done;
-	  let rec putBack (perm : int list) poses : unit = 
+	  (*let rec putBack (perm : int list) poses : unit = 
 	  	match perm, poses with
 	  	| ([], []) -> ()
 	  	| h :: t, (x,y) :: t1 -> layout.(x).(y) <- posHand.(h); putBack t t1
-	  in putBack !bPerm !best
+	  in putBack !bPerm !best*)
 
 
 
