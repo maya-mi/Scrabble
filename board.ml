@@ -1,5 +1,6 @@
 open Tile;;
 open Words;;
+open Ai ;;
 
 let cFRAMESIZE = 750;;
 let length = cFRAMESIZE / 18;;
@@ -35,6 +36,7 @@ class board (players: int) (ais:int) =
 	val mutable savedQ = min_int
 	val mutable toggleClicked = false
 	val mutable play = []
+	val perms = standPerm 7
 	val mutable validPos = false
 	val mutable scores = Array.make players 0
 	val mutable turn = 0
@@ -101,12 +103,39 @@ class board (players: int) (ais:int) =
 			reals.(i) <- true;
 		done;
 
-	method playAI () = ()
+	method playAI posHand =
+	  let best = ref [] in
+	  let bPerm = ref [] in
+	  let bScore = ref 0 in
+	  for x = 0 to 15 do
+	  	for y = 0 to 15 do
+	  	  if this#validating x y then
+	  	  let rec testMove (order : int list) (posX : int) (posY : int) : unit =
+	  	    match order with
+	  	    | [] -> if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
+	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []
+	  	    | h :: t -> if layout.(posX).(posY)#isBlank then testMove order (posX + 1) posY else
+	  	   	  layout.(posX).(posY) <- posHand.(h); play <- (posX, posY) :: play; 
+	  	      testMove t (posX +1) posY
+	  	  in
+	  	  List.iter (fun cur -> testMove cur x y) perms
+	  	done;
+	  done;
+	  let rec putBack (perm : int list) poses : unit = 
+	  	match perm, poses with
+	  	| ([], []) -> ()
+	  	| h :: t, (x,y) :: t1 -> layout.(x).(y) <- posHand.(h); putBack t t1
+	  in putBack !bPerm !best
+
+
+
+
+
 
 	method advanceTurn () = 
 	 let rec help () = 
 		turn <- (turn + 1) mod (players);
-		if not reals.(turn) then (this#playAI (); help ()); in 
+		if not reals.(turn) then (this#playAI hands.(turn); help ()); in 
 	 help ()
 
 	method validating x y = 
@@ -271,7 +300,7 @@ class board (players: int) (ais:int) =
 		else if k = 'r' then this#reset ()
 	    else if k = 'd' && dumping then 
 	      (this#dump dumps ;
-	      this#refresh ();
+	      this#refresh () ;
 	  	  this#advanceTurn ())
 	    else if k = 'd' then dumping <- true
 	 	else if k = 'p' then (this#reset (); this#advanceTurn ())

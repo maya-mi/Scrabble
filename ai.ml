@@ -17,7 +17,7 @@ let getWords (board : tile array array) (tiles : tile array) (timer : float) : (
 
 
 
-let isHori (tiles : tile array) : bool option = 
+(*let isHori (tiles : tile array) : bool option = 
   let hor = ref true in 
   let vert = ref true in
   let lastX = tiles.(0)#getX in
@@ -70,7 +70,7 @@ let computeVal (board : tile array array) (tiles : tile array) : int =
       ignore result = result + (getScore word1)
     done in result
   | None -> -1
-;;
+;;*)
 
 
 
