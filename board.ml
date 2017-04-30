@@ -113,7 +113,7 @@ class board (players: int) (ais:int) =
 	  	  if this#validating x y then
 	  	  let rec testMove (order : int list) (posX : int) (posY : int) : unit =
 	  	  	if posX >= 15 then (if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
-	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- [])
+	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []) else
 	  	    match order with
 	  	    | [] -> if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
 	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []
