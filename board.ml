@@ -193,16 +193,16 @@ class board (players: int) (ais:int) =
 	        let _, culTiles = (List.fold_left (fun acc index ->
 	          let stop, aList = acc in 
 	          if stop then acc else if index = 7 then true, aList 
-	          else if index = 8 then stop, layout.(x).(y) :: aList
-	          else stop, posHand.(index) :: aList) (false, []) order) in
-	        if isWord (this#stripLetters culTiles)
-	           then
+	          else if index = 8 then stop, aList @ [layout.(x).(y)] 
+	          else stop, aList @ [posHand.(index)]) (false, []) order) in
+	        if (List.find_all (fun cur -> cur = 7) pre) <> [] then 
+	        (if isWord (this#stripLetters culTiles) then
             compWord true true (x - 1) y pre;
             compWord false true (x + 1) y post ;
             checkPlay order ;
             compWord true false x (y - 1) pre ;
             compWord false false x (y + 1) post ;
-            checkPlay order;
+            checkPlay order;)
           done;
         done;
       in (*List.iter tryMove perms;*)
