@@ -1,6 +1,7 @@
 open Tile;;
 open Words;;
 open PermHelp ;;
+open Graphics;;
 
 let cFRAMESIZE = 750;;
 let length = cFRAMESIZE / 18;;
@@ -71,10 +72,14 @@ class board (players: int) (ais:int) =
 		Graphics.fill_rect 0 0 cFRAMESIZE cFRAMESIZE;
 		Graphics.set_color (Graphics.black);
 		Array.iteri (fun index x -> 
-		Graphics.moveto (cFRAMESIZE - 10 * length + index * length * 2) (cFRAMESIZE - length);
-		Graphics.draw_string ("SCORE: " ^ (string_of_int x))) scores ;
-		Graphics.moveto (cFRAMESIZE - 3 * length) (cFRAMESIZE - length/2);
-		Graphics.draw_string ("PLAYER " ^ (string_of_int (1 + turn)) ^ "'S TURN")
+		Graphics.moveto (length * index * 7 / 2 + length) (cFRAMESIZE - length);
+		Graphics.draw_string ("PLAYER " ^ (string_of_int (index + 1)) ^ "'S SCORE: " ^ (string_of_int x))) scores ;
+		Graphics.moveto (cFRAMESIZE - 3 * length) (cFRAMESIZE - length);
+		let msg = "PLAYER " ^ (string_of_int (1 + turn)) ^ "'S TURN" in 
+		let (x, y) = text_size msg in 
+		draw_string msg; 
+		set_color red;
+		draw_rect (cFRAMESIZE - 3 * length - 5) (cFRAMESIZE - length - 5) (x + 10) (y + 10)
 
 
 
@@ -147,6 +152,9 @@ class board (players: int) (ais:int) =
       | [] -> failwith "False case"
 (*layout.(x1).(y1) = blank then (layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;*)
 	method playAI posHand =
+	  this#draw ();
+	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
+	  draw_string "AI THINKING";
 	  let best = ref [] in
 	  let bPerm = ref [] in
 	  let bScore = ref 0 in
@@ -252,7 +260,8 @@ class board (players: int) (ais:int) =
 			let x = mouse_x / length - 1 in
 			let y = mouse_y / length - 2 in
 			if (inRange x 0 14 && inRange y 0 14 && layout.(x).(y)#isBlank) then 
-				(let wm = layout.(x).(y)#getWordMult in 
+				(let wm = layout.(x).(y)#getWordMult
+				 in 
 				if wm <> 1 then hands.(turn).(savedQ)#setWordMult wm;
 				let lm = layout.(x).(y)#getLetterMult in 
 				if lm <> 1 then hands.(turn).(savedQ)#setLetterMult lm;
