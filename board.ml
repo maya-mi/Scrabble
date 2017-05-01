@@ -165,7 +165,7 @@ class board (players: int) (ais:int) =
 	    let pre, post = this#break 8 order [] in
 	    let rec compWord (back : bool) (hor : bool) (x1 : int) (y1 : int) (places : int list) : unit =
 	      match places with
-	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h == 7 then () else
+	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h = 7 then () else
 	        (if layout.(x1).(y1)#isBlank then (layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;
               (if (not back) && hor then compWord back hor (x1 + 1) y1 t
 	          else if back && hor then compWord back hor (x1 - 1) y1 t
@@ -181,6 +181,7 @@ class board (players: int) (ais:int) =
 	    for x = 0 to 14 do
 	      for y = 0 to 14 do
 	      if not layout.(x).(y)#isBlank then
+	        (*if isWord (this#stripLetters (fun acc index -> let stop, aList = acc in if stop then acc else (if h = 7 then true, aList else if h = 8 then stop, layout.(x).(y) :: aList else stop, posHand.(x) :: aList)) [] order)*)
             compWord true true x y pre;
             compWord false true x y post ;
             checkPlay order ;
