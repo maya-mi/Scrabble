@@ -1,6 +1,6 @@
 open Tile;;
 open Words;;
-open Ai ;;
+open PermHelp ;;
 
 let cFRAMESIZE = 750;;
 let length = cFRAMESIZE / 18;;
@@ -36,7 +36,8 @@ class board (players: int) (ais:int) =
 	val mutable savedQ = min_int
 	val mutable toggleClicked = false
 	val mutable play = []
-	val perms = standPerm 9
+	val perms = perm1 [0; 1; 2; 3; 4; 5; 7; 8]
+	val mutable standL = [0; 1; 2; 3; 4; 5; 6; 7; 8]
 	val mutable validPos = false
 	val mutable scores = Array.make players 0
 	val mutable turn = 0
@@ -69,9 +70,9 @@ class board (players: int) (ais:int) =
 	method drawBoard () = 
 		this#drawSetting();
 		for i = 0 to 14 do
-			for j = 0 to 14 do 
-				layout.(i).(j)#draw i j;
-			done
+		  for j = 0 to 14 do 
+		    layout.(i).(j)#draw i j;
+		  done
 		done;
 
 
@@ -104,13 +105,65 @@ class board (players: int) (ais:int) =
 			reals.(i) <- true;
 		done;
 
+    method break (point : int) (input : int list) (acc : int list) : (int list) * (int list) =
+      match input with
+      | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
+      | [] -> failwith "False case"
+(*layout.(x1).(y1) = blank then (layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;*)
 	method playAI posHand =
 	  let best = ref [] in
 	  let bPerm = ref [] in
 	  let bScore = ref 0 in
-	  for x = 0 to 14 do
-	  	for y = 0 to 14 do
-	  	  if this#validating x y then
+	  let checkPlay curPerm = if List.length play = 0 then this#reset () else if this#is_valid () then (if turnScore > !bScore then best := play; bPerm := (List.fold_left (fun acc cord -> let x,y = cord in layout.(x).(y) :: acc) [] play));
+	    this#reset ()
+	  in
+	  let tryMove (order : int list): unit =
+	    let pre, post = this#break 8 order [] in
+	    let rec compWord (back : bool) (hor : bool) (x1 : int) (y1 : int) (places : int list) : unit =
+	      match places with
+	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h == 7 then () else
+	        (if layout.(x1).(y1)#isBlank then (layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;
+              (if (not back) && hor then compWord back hor (x1 + 1) y1 t
+	          else if back && hor then compWord back hor (x1 - 1) y1 t
+	          else if not back && not hor then compWord back hor x1 (y1 + 1) t
+	          else compWord back hor x1 (y1 - 1) t)) 
+	        else 
+	          (if not back && hor then compWord back hor (x1 + 1) y1 places
+	          else if back && hor then compWord back hor (x1 - 1) y1 places
+	          else if not back && not hor then compWord back hor x1 (y1 + 1) places
+	          else compWord back hor x1 (y1 - 1) places))
+	      | [] -> ()
+	    in 
+	    for x = 0 to 14 do
+	      for y = 0 to 14 do
+	      if not layout.(x).(y)#isBlank then
+            compWord true true x y pre;
+            compWord false true x y post ;
+            checkPlay order ;
+            compWord true false x y pre ;
+            compWord false false x y post ;
+            checkPlay order;
+          done;
+        done;
+      in (*List.iter tryMove perms;*)
+      for _x = 0 to 1000 do
+      	standL <- shuffle standL;
+        tryMove standL;
+      done;
+      play <- !best;
+      let rec setFinal (coords : (int*int) list) tiles : unit =
+      	match coords, tiles with
+      	| (x, y) :: t, h1 :: t1 -> let _ = layout.(x).(y) <- h1 in setFinal t t1
+	  	| [], [] -> ()
+	  	| _ -> failwith "improper behavior"
+	  in
+	  setFinal play (!bPerm);
+	  this#refresh ()
+
+
+
+
+	  	  (*if this#validating x y then
 	  	  let rec testMove (order : int list) (posX : int) (posY : int) : unit =
 	  	  	if posX >= 15 then (if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
 	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []) else
@@ -130,7 +183,7 @@ class board (players: int) (ais:int) =
 	  	match perm, poses with
 	  	| ([], []) -> ()
 	  	| h :: t, (x,y) :: t1 -> layout.(x).(y) <- posHand.(h); putBack t t1
-	  in putBack !bPerm !best
+	  in putBack !bPerm !best*)
 
 
 
