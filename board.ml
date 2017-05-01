@@ -138,10 +138,6 @@ class board (players: int) (ais:int) =
 			reals.(i) <- true;
 		done;
 
-<<<<<<< HEAD
-	method playAI _posHand = ()
-	  let best = ref [] in
-=======
     method break (point : int) (input : int list) (acc : int list) : (int list) * (int list) =
       match input with
       | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
@@ -149,7 +145,6 @@ class board (players: int) (ais:int) =
 (*layout.(x1).(y1) = blank then (layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;*)
 	method playAI posHand =
 	  let best = ref [] in
->>>>>>> c3e31d0408c030d5f86fe3389e3b86c481e9cbcf
 	  let bPerm = ref [] in
 	  let bScore = ref 0 in
 	  let checkPlay curPerm = if List.length play = 0 then this#reset () else if this#is_valid () then (if turnScore > !bScore then best := play; bPerm := (List.fold_left (fun acc cord -> let x,y = cord in layout.(x).(y) :: acc) [] play));
