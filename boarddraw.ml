@@ -116,7 +116,7 @@ let listen () =
 	let b = new board p a in 
 	b#init ();
 	b#draw (); 
-	loop_at_exit [Button_down; Key_pressed] (fun s -> clear_graph (); b#react s; b#draw ());;
+	loop_at_exit [Button_down; Key_pressed] (fun s -> b#react s; clear_graph (); b#draw ());;
 
 listen ();;
 
