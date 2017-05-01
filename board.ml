@@ -176,7 +176,7 @@ class board (players: int) (ais:int) =
 	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h = 7 then () else
 	        (if layout.(x1).(y1)#isBlank then 
 	        	(layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;
-              	if (not back) && hor then compWord back hor (x1 + 1) y1 t
+              	if not back && hor then compWord back hor (x1 + 1) y1 t
 	            else if back && hor then compWord back hor (x1 - 1) y1 t
 	          	else if not back && not hor then compWord back hor x1 (y1 + 1) t
 	          	else compWord back hor x1 (y1 - 1) t)
