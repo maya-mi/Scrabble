@@ -156,22 +156,30 @@ class board (players: int) (ais:int) =
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
 	  draw_string "AI THINKING";
 
+	  (*Holds the best play: coordinate list (x, y)*)
 	  let best = ref [] in
+	  (*Holds tiles in the best play, in the same order as best*)
 	  let bPerm = ref [] in
 	  let bScore = ref 0 in
-	  let checkPlay curPerm = if List.length play = 0 then this#reset () else if this#is_valid () then (if turnScore > !bScore then best := play; bPerm := (List.fold_left (fun acc cord -> let x,y = cord in layout.(x).(y) :: acc) [] play));
-	    this#reset ()
+	  let checkPlay curPerm = 
+	  	if List.length play = 0 then this#reset () 
+	  	else 
+	  		(if this#is_valid () 
+	  		then (if turnScore > !bScore then (best := play; 
+	  			bPerm := (List.fold_left (fun acc (x, y) -> layout.(x).(y) :: acc) [] play)));
+	        this#reset ())
 	  in
 	  let tryMove (order : int list): unit =
 	    let pre, post = this#break 8 order [] in
 	    let rec compWord (back : bool) (hor : bool) (x1 : int) (y1 : int) (places : int list) : unit =
 	      match places with
 	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h = 7 then () else
-	        (if layout.(x1).(y1)#isBlank then (layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;
-              (if (not back) && hor then compWord back hor (x1 + 1) y1 t
-	          else if back && hor then compWord back hor (x1 - 1) y1 t
-	          else if not back && not hor then compWord back hor x1 (y1 + 1) t
-	          else compWord back hor x1 (y1 - 1) t)) 
+	        (if layout.(x1).(y1)#isBlank then 
+	        	(layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;
+              	if (not back) && hor then compWord back hor (x1 + 1) y1 t
+	            else if back && hor then compWord back hor (x1 - 1) y1 t
+	          	else if not back && not hor then compWord back hor x1 (y1 + 1) t
+	          	else compWord back hor x1 (y1 - 1) t)
 	        else 
 	          (if not back && hor then compWord back hor (x1 + 1) y1 places
 	          else if back && hor then compWord back hor (x1 - 1) y1 places
@@ -189,11 +197,11 @@ class board (players: int) (ais:int) =
 	          else stop, posHand.(index) :: aList) (false, []) order) in
 	        if isWord (this#stripLetters culTiles)
 	           then
-            compWord true true x y pre;
-            compWord false true x y post ;
+            compWord true true (x - 1) y pre;
+            compWord false true (x + 1) y post ;
             checkPlay order ;
-            compWord true false x y pre ;
-            compWord false false x y post ;
+            compWord true false x (y - 1) pre ;
+            compWord false false x (y + 1) post ;
             checkPlay order;
           done;
         done;
