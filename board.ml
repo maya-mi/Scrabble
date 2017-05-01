@@ -401,7 +401,8 @@ class board (players: int) (ais:int) =
 		moveto (cFRAMESIZE - 2 * length - 5) (cFRAMESIZE - 2 * length);
 		set_color black;
 		draw_string msg;
-		this#wait 3.;
+		this#wait 5.;
+		raise Exit
 		
 
 
