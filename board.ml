@@ -405,7 +405,14 @@ class board (players: int) (ais:int) =
 
 	method endGame (winner: int) = 
 		this#endScore winner;
-		Graphics.draw_string ("PLAYER " ^ (string_of_int winner) ^ " WINS!");
+		let msg = "PLAYER " ^ (string_of_int winner) ^ " WINS!" in
+		moveto (cFRAMESIZE - 2 * length - 5) (cFRAMESIZE - 2 * length);
+		set_color black;
+		draw_string msg;
+		this#wait 5.;
+		raise Exit
+		
+
 
 
 
