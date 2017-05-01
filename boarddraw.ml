@@ -69,7 +69,7 @@ let x11_initialize () =
   let a = ai_loop () in 
   G.moveto (windowSize / 3) (5 * windowSize / 12);
   G.draw_string ((string_of_int a) ^ " AI selected.");
-  delay 3.;
+  delay 1.;
   (p, a));;
 
  

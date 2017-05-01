@@ -8,6 +8,10 @@ class tile  ({id; score}: letter) =
  	val shadow = Graphics.rgb 222 184 135
  	val tile_color = Graphics.rgb 255 239 213 
  	val blank_color = Graphics.rgb 205 205 193
+ 	val w2 = Graphics.rgb 250 128 114
+ 	val w3 = Graphics.rgb 178 34 34
+ 	val l2 = Graphics.rgb 125 158 192
+ 	val l3 = Graphics.rgb 0 104 139 
  	val lines = Graphics.rgb 139 137 112
  	val mutable ch = id
  	val mutable score = score
@@ -49,8 +53,10 @@ class tile  ({id; score}: letter) =
  		if this#isBlank then (
  			Graphics.set_color blank_color; 
  			if x = 7 && y = 7 then Graphics.set_color Graphics.magenta;
- 			if wordMultiplier = 2 then Graphics.set_color Graphics.red;
- 			if letterMultiplier = 2 then Graphics.set_color Graphics.blue; 
+ 			if wordMultiplier = 2 then Graphics.set_color w2;
+ 			if letterMultiplier = 2 then Graphics.set_color l2; 
+ 			if wordMultiplier = 3 then Graphics.set_color w3;
+ 			if letterMultiplier = 3 then Graphics.set_color l3;
  			Graphics.fill_rect xc yc length length;
  			Graphics.set_color lines;
  			Graphics.draw_rect xc yc length length)

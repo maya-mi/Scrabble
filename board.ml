@@ -9,6 +9,11 @@ let w2 = (new tile {id = char_of_int 32; score = 0});;
 w2#setWordMult 2;;
 let l2 = (new tile {id = char_of_int 32; score = 0});;
 l2#setLetterMult 2;;
+let w3 = (new tile {id = char_of_int 32; score = 0});;
+w3#setWordMult 3;;
+let l3 = (new tile {id = char_of_int 32; score = 0});;
+l3#setLetterMult 3;;
+let grn = Graphics.rgb 84 139 84;;
 
 let listFind f lst = 
 	match lst with
@@ -43,6 +48,7 @@ class board (players: int) (ais:int) =
 	val mutable passes = 0
 	val mutable turnScore = 0	
 	val mutable dumping = false
+	val mutable help = false
 	val mutable dumps = []
 	val w2s = [(1, 1); (2, 2); (3, 3); (4, 4); (10, 10); (11, 11); (12, 12); (13, 13);
 			   (1, 13); (2, 12); (3, 11); (4, 10); (10, 4); (11, 3); (12, 2); (13, 1)]
@@ -50,6 +56,9 @@ class board (players: int) (ais:int) =
     		   (6, 6); (8, 8); (8, 6); (6, 8);
     		   (2, 6); (2, 8); (3, 7); (6, 2); (8, 2); (7, 3);
     		   (12, 6); (12, 8); (11, 7); (6, 12); (8, 12); (7, 11)]
+    val w3s = [(0, 0); (7, 0); (14, 0); (0, 7); (0, 14); (7, 14); (14, 7); (14, 14)]
+    val l3s = [(5, 5); (1, 5); (1, 9); (5, 9); (5, 13); (9, 13); (9, 9); (13, 9); (13, 5); (9, 5); (9, 1); (5, 1)]
+    		   
 
 	method pullTile () = 
 		match drawPile with
@@ -57,13 +66,33 @@ class board (players: int) (ais:int) =
 		|hd :: tl -> drawPile <- tl; new tile hd
 
 	method drawSetting () = 
-		Graphics.set_color (Graphics.rgb 84 139 84);
+		Graphics.set_color grn;
 		Graphics.fill_rect 0 0 cFRAMESIZE cFRAMESIZE;
 		Graphics.set_color (Graphics.black);
 		Graphics.moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - length);
 		Graphics.draw_string ("SCORE: " ^ (string_of_int scores.(turn)));
 		Graphics.moveto (cFRAMESIZE - 3 * length) (cFRAMESIZE - length/2);
 		Graphics.draw_string ("PLAYER " ^ (string_of_int (1 + turn)) ^ "'S TURN");
+
+	method drawHelp () = 
+		this#drawSetting ();
+		l2#draw 1 3;
+		l3#draw 1 5;
+		w2#draw 1 8;
+		w3#draw 1 10;
+		Graphics.set_color Graphics.black;
+		Graphics.moveto (cFRAMESIZE / 5) (length * 25 / 2);
+		Graphics.draw_string "Triple word score tile";
+		Graphics.moveto (cFRAMESIZE / 5) (length * 21 / 2);
+		Graphics.draw_string "Double word score tile";
+		Graphics.moveto (cFRAMESIZE / 5) (length * 15 / 2);
+		Graphics.draw_string "Triple letter score tile";
+		Graphics.moveto (cFRAMESIZE / 5) (length * 11 / 2);
+		Graphics.draw_string "Double letter score tile";
+		let msgs = ["'p' passes"; 
+					"Enter 'd' to select tiles to dump, and 'd' to finalize dump";
+					"'r' resets the board, including unfinished dumps"; "Hit the space bar to score a word"; "'x' Exits"] in 
+		List.iteri (fun i msg -> Graphics.moveto (cFRAMESIZE / 2) (cFRAMESIZE - length * (i + 7)); Graphics.draw_string msg) msgs;
 
 	
 	method drawBoard () = 
@@ -89,12 +118,16 @@ class board (players: int) (ais:int) =
 
 
 	method draw () = 
-		this#drawBoard ();
-		this#drawHand ()
+		if help then this#drawHelp ()
+		else
+			(this#drawBoard ();
+			this#drawHand ())
 
 	method init () = 
 		List.iter (fun (x, y) -> layout.(x).(y) <- w2) w2s;
 		List.iter (fun (x, y) -> layout.(x).(y) <- l2) l2s;
+		List.iter (fun (x, y) -> layout.(x).(y) <- w3) w3s;
+		List.iter (fun (x, y) -> layout.(x).(y) <- l3) l3s;
 		for i = 0 to players - 1 do
 			for j = 0 to 6 do 
 				hands.(i).(j) <- this#pullTile ();
@@ -104,8 +137,8 @@ class board (players: int) (ais:int) =
 			reals.(i) <- true;
 		done;
 
-	method playAI posHand =
-	  let best = ref [] in
+	method playAI _posHand = ()
+	  (*let best = ref [] in
 	  let bPerm = ref [] in
 	  let bScore = ref 0 in
 	  for x = 0 to 14 do
@@ -130,7 +163,7 @@ class board (players: int) (ais:int) =
 	  	match perm, poses with
 	  	| ([], []) -> ()
 	  	| h :: t, (x,y) :: t1 -> layout.(x).(y) <- posHand.(h); putBack t t1
-	  in putBack !bPerm !best
+	  in putBack !bPerm !best*)
 
 
 
@@ -269,15 +302,20 @@ class board (players: int) (ais:int) =
 		turnScore <- 0;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- l2) l2s;
+		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w3) w3s;
+		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- l3) l3s;
 		List.iter (fun (x, y) -> layout.(x).(y)#unclick; layout.(x).(y)#setWordMult 1;
 		 layout.(x).(y)#setLetterMult 1 ) play;
 		play <- [];
 		validPos <- false;
+		let blanks = ref 0 in 
 		for i = 0 to 6 do 
 			if hands.(turn).(i)#isBlank then hands.(turn).(i) <- this#pullTile ();
-		done
+			if hands.(turn).(i)#isBlank then blanks := !blanks + 1;
+		done;
+		if !blanks = 7 then this#endGame turn;
 
-	method endGame (winner: int) =
+	method endScore (winner: int) =
 		let playerMinus = ref 0 in 
 		let winnerBonus = ref 0 in 
 		for i = 0 to players - 1 do
@@ -289,6 +327,14 @@ class board (players: int) (ais:int) =
 			playerMinus := 0;
 		done;
 		scores.(winner) <- scores.(winner) + !winnerBonus
+
+	method endGame (winner: int) = 
+		this#endScore winner;
+		Graphics.set_color grn;
+		Graphics.fill_rect 0 0 cFRAMESIZE cFRAMESIZE;
+		Graphics.moveto (cFRAMESIZE / 2) (cFRAMESIZE / 2);
+		Graphics.draw_string ("PLAYER " ^ (string_of_int winner) ^ " WINS!");
+
 
 
 	method findWinner () = 
@@ -309,6 +355,8 @@ class board (players: int) (ais:int) =
 		play <- [];
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- l2) l2s;
+		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w3) w3s;
+		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- l3) l3s;
 		validPos <- false;
 		for i = 0 to 6 do 
 			if hands.(turn).(i)#isBlank then 
@@ -320,9 +368,15 @@ class board (players: int) (ais:int) =
 			hands.(turn).(i)#setWordMult 1;
 			hands.(turn).(i)#setLetterMult 1;
 		done	
-		
+
+	method wait x = 
+		let rec delay (sec: float) : unit =
+  			try ignore(Thread.delay sec)
+ 			with Unix.Unix_error _ -> delay sec in 
+ 		delay x
 	
 	method keyParse k = 
+		if k = 'h' then help <- not help;
 		if k = ' ' then 
 			if this#is_valid () then (this#refresh (); this#advanceTurn ();)
 			else this#reset ()
@@ -337,6 +391,7 @@ class board (players: int) (ais:int) =
 	 		if passes = players then this#endGame (this#findWinner ())
 	 		else (this#reset (); this#advanceTurn ());)
 	 	else if k = 'x' then raise Exit
+	 	
 
 	method react (s: Graphics.status) = 
 		if s.keypressed then this#keyParse s.key
