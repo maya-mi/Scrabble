@@ -148,7 +148,7 @@ class board (players: int) (ais:int) =
 
     method break (point : int) (input : int list) (acc : int list) : (int list) * (int list) =
       match input with
-      | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
+      | h :: t -> if h = point then (acc, t) else this#break point t (acc @ [h])
       | [] -> failwith "False case"
 (*layout.(x1).(y1) = blank then (layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;*)
 	method playAI posHand =
