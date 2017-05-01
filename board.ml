@@ -97,8 +97,10 @@ class board (players: int) (ais:int) =
 					"Enter 'd' to select tiles to dump, and 'd' to finalize dump";
 					"'r' resets the board, including unfinished dumps"; "Hit the space bar to score a word"; "'x' Exits"] in 
 		List.iteri (fun i msg -> Graphics.moveto (cFRAMESIZE / 2) (cFRAMESIZE - length * (i + 7)); Graphics.draw_string msg) msgs;
+		Graphics.moveto (cFRAMESIZE / 5) (length * 4);
+		Graphics.draw_string "PRESS 'h' TO EXIT HELP";
 
-	
+
 	method drawBoard () = 
 		this#drawSetting();
 		for i = 0 to 14 do
