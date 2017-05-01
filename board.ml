@@ -71,7 +71,7 @@ class board (players: int) (ais:int) =
 		Graphics.fill_rect 0 0 cFRAMESIZE cFRAMESIZE;
 		Graphics.set_color (Graphics.black);
 		Array.iteri (fun index x -> 
-		Graphics.moveto (cFRAMESIZE - 4 * length + index * 10) (cFRAMESIZE - length);
+		Graphics.moveto (cFRAMESIZE - 10 * length + index * length * 2) (cFRAMESIZE - length);
 		Graphics.draw_string ("SCORE: " ^ (string_of_int x))) scores ;
 		Graphics.moveto (cFRAMESIZE - 3 * length) (cFRAMESIZE - length/2);
 		Graphics.draw_string ("PLAYER " ^ (string_of_int (1 + turn)) ^ "'S TURN")
