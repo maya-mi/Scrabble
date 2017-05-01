@@ -75,6 +75,14 @@ class board (players: int) (ais:int) =
 		Graphics.moveto (cFRAMESIZE - 3 * length) (cFRAMESIZE - length/2);
 		Graphics.draw_string ("PLAYER " ^ (string_of_int (1 + turn)) ^ "'S TURN");
 
+
+
+		Graphics.moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - length);
+		Graphics.draw_string ("SCORE: " ^ (string_of_int scores.(turn)));
+		Graphics.moveto (cFRAMESIZE - 3 * length) (cFRAMESIZE - length/2);
+		Graphics.draw_string ("PLAYER " ^ (string_of_int (1 + turn)) ^ "'S TURN");
+
+
 	method drawHelp () = 
 		this#drawSetting ();
 		l2#draw 1 3;
@@ -179,7 +187,7 @@ class board (players: int) (ais:int) =
           done;
         done;
       in (*List.iter tryMove perms;*)
-      for _x = 0 to 1000 do
+      for _x = 0 to 2000 do
       	standL <- shuffle standL;
         tryMove standL;
       done;
@@ -191,6 +199,7 @@ class board (players: int) (ais:int) =
 	  	| _ -> failwith "improper behavior"
 	  in
 	  setFinal play (!bPerm);
+	  ignore (this#is_valid ());
 	  this#refresh ()
 
 
