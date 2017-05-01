@@ -42,7 +42,7 @@ class board (players: int) (ais:int) =
 	val mutable savedQ = min_int
 	val mutable toggleClicked = false
 	val mutable play = []
-	val perms = perm1 [0; 1; 2; 3; 4; 5; 7; 8]
+	val perms = perm1 [0; 1; 2; 3; 4; 5; 6; 7; 8]
 	val mutable standL = [0; 1; 2; 3; 4; 5; 6; 7; 8]
 	val mutable validPos = false
 	val mutable scores = Array.make players 0
@@ -155,6 +155,7 @@ class board (players: int) (ais:int) =
 	  this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
 	  draw_string "AI THINKING";
+
 	  let best = ref [] in
 	  let bPerm = ref [] in
 	  let bScore = ref 0 in
@@ -181,7 +182,13 @@ class board (players: int) (ais:int) =
 	    for x = 0 to 14 do
 	      for y = 0 to 14 do
 	      if not layout.(x).(y)#isBlank then
-	        (*if isWord (this#stripLetters (fun acc index -> let stop, aList = acc in if stop then acc else (if h = 7 then true, aList else if h = 8 then stop, layout.(x).(y) :: aList else stop, posHand.(x) :: aList)) [] order)*)
+	        let _, culTiles = (List.fold_left (fun acc index ->
+	          let stop, aList = acc in 
+	          if stop then acc else if index = 7 then true, aList 
+	          else if index = 8 then stop, layout.(x).(y) :: aList
+	          else stop, posHand.(index) :: aList) (false, []) order) in
+	        if isWord (this#stripLetters culTiles)
+	           then
             compWord true true x y pre;
             compWord false true x y post ;
             checkPlay order ;
@@ -191,10 +198,11 @@ class board (players: int) (ais:int) =
           done;
         done;
       in (*List.iter tryMove perms;*)
-      for _x = 0 to 2000 do
+      (*for _x = 0 to 50000 do
       	standL <- shuffle standL;
         tryMove standL;
-      done;
+      done;*)
+      List.iter tryMove perms ;
       play <- !best;
       let rec setFinal (coords : (int*int) list) tiles : unit =
       	match coords, tiles with
