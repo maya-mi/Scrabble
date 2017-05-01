@@ -152,9 +152,9 @@ class board (players: int) (ais:int) =
       | [] -> failwith "False case"
 (*layout.(x1).(y1) = blank then (layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;*)
 	method playAI posHand =
-	  this#draw ();
+	  (*this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
-	  draw_string "AI THINKING";
+	  draw_string "AI THINKING";*)
 	  let best = ref [] in
 	  let bPerm = ref [] in
 	  let bScore = ref 0 in
