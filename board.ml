@@ -95,10 +95,8 @@ class board (players: int) (ais:int) =
 		Graphics.draw_string "Double letter score tile";
 		let msgs = ["'p' passes"; 
 					"Enter 'd' to select tiles to dump, and 'd' to finalize dump";
-					"'r' resets the board, including unfinished dumps"; "Hit the space bar to score a word"; "'x' Exits"] in 
-		List.iteri (fun i msg -> Graphics.moveto (cFRAMESIZE / 2) (cFRAMESIZE - length * (i + 7)); Graphics.draw_string msg) msgs;
-		Graphics.moveto (cFRAMESIZE / 5) (length * 4);
-		Graphics.draw_string "PRESS 'h' TO EXIT HELP";
+					"'r' resets the board, including unfinished dumps"; "Hit the space bar to score a word"; "'x' exits the game"; "PRESS 'h' TO EXIT HELP"] in 
+		List.iteri (fun i msg -> Graphics.moveto (cFRAMESIZE / 2) (cFRAMESIZE - length * (i + 7)); Graphics.draw_string msg) msgs
 
 
 	method drawBoard () = 
@@ -390,9 +388,6 @@ class board (players: int) (ais:int) =
 
 	method endGame (winner: int) = 
 		this#endScore winner;
-		Graphics.set_color grn;
-		Graphics.fill_rect 0 0 cFRAMESIZE cFRAMESIZE;
-		Graphics.moveto (cFRAMESIZE / 2) (cFRAMESIZE / 2);
 		Graphics.draw_string ("PLAYER " ^ (string_of_int winner) ^ " WINS!");
 
 
