@@ -748,7 +748,7 @@ class board (players: int) (ais:int) =
                   placeTiles play !corr;
                   List.iter (fun (x,y) -> print_int x; print_string " "; print_int y; print_endline "") play;
                   print (this#stripLetters !curWord); print_endline "";
-                  if this#is_valid () then print (this#stripLetters !curWord); print_endline ""; begin  if turnScore > !bScore then 
+                  if this#is_valid () then begin print (this#stripLetters !curWord); print_endline ""; if turnScore > !bScore then 
                     begin bScore := turnScore; bCorr := !corr; bPlay := play end end;
                  this#reset () end;
                  play <- [];
