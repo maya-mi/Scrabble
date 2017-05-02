@@ -225,7 +225,10 @@ class board (players: int) (ais:int) =
       | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
       | [] -> failwith "False case"
 	method playAI posHand =
-	  	  let bScore = ref 0 in
+	  this#draw ();
+	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
+	  draw_string "AI THINKING";
+	  let bScore = ref 0 in
 	  let bCorr = ref [] in
 	  let bPlay = ref [] in
 	  let rep = ref 0 in
@@ -333,6 +336,7 @@ class board (players: int) (ais:int) =
        List.iter (fun (x,y) -> print_int x; print_string " "; print_int y; print_endline "") !bPlay;
        placeTiles !bPlay !bCorr;
        ignore (this#is_valid ());
+       this#refresh ()
 	 (*) this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
 	  draw_string "AI THINKING";
