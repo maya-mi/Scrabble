@@ -9,20 +9,11 @@ open Board ;;
 open Tile ;;
 module G = Graphics ;;
 
-(*......................................................................
-  Configuration 
- *)
+(*......................................................................*)
   
 
 let windowSize = 750;;
 let grn = G.rgb 84 139 84;;
-
-
-
-(*......................................................................
-  A solver that animates the solution process using OCaml's X11
-  graphics support
- *)
 
 
 
@@ -31,17 +22,11 @@ let rec delay (sec: float) : unit =
   with Unix.Unix_error _ -> delay sec
 
 
-let display_message msg = 
-  G.moveto (windowSize / 2) (windowSize / 2) ;
-  G.set_color G.black;
-  G.draw_string msg;
-  delay 3.;
-  let (x, y) = G.text_size msg in 
-  G.set_color grn;
-  G.fill_rect (windowSize / 2) (windowSize / 2) x y;;
 
-let x11_initialize () =
-  (* open a graphics window to draw into and size it appropriately *)
+(* Open a graphics window to draw into and size it appropriately. Listens
+for user preferences for number of total playters, including AIs, and
+number of AIs*)
+let initialize () =
   G.open_graph "";
   G.resize_window windowSize windowSize;
   G.set_color grn;
@@ -58,7 +43,7 @@ let x11_initialize () =
   let p = player_loop () in 
   G.moveto (windowSize / 3) (2 * windowSize / 3);
   G.draw_string ((string_of_int p) ^ " players selected.");
-  if p = 1 then (G.draw_string " 0 AI assigned"; delay 3.; (1, 0)) else
+  if p = 1 then (G.draw_string " 0 AI assigned"; delay 1.; (1, 0)) else
   (G.moveto (windowSize / 3) (windowSize / 2);
   G.draw_string ("Enter number of AI: [0-" ^ (string_of_int (p - 1)) ^ "]");
   let rec ai_loop () = 
@@ -73,50 +58,14 @@ let x11_initialize () =
   (p, a));;
 
  
-  (* turn off auto synchronizing; we'll handle double buffer
-     synchronization ourselves *)
-
- 
-
-
-
-(*
+(*Initializes board with appt players. Listens for user interaction*)
 let listen () = 
-	x11_initialize ();
-	let b = new board in 
-  	b#draw ();
-	try
-		loop_at_exit [Graphics.Button_down; Poll] (fun s -> sprintf "Mouse position: %d,%d" s.mouse_x s.mouse_y);
-	with
-	| End -> x11_finalize ();; *)
-
-
-(*
-let () =
-  open_graph "";
-  loop ();
-  close_graph ();*)
-(*
-let listen () = 
-	x11_initialize ();
-	let b = new board in 
-	b#init ();
-  	b#draw ();
-  	let rec loop () =
- 		let s = wait_next_event [Button_down] in
-  		clear_graph ();
-  		b#react s;
- 		b#draw (); 
-  		loop () in 
-	loop ();
-	x11_finalize ();;*)
-
-let listen () = 
-	let (p, a) = x11_initialize () in 
+	let (p, a) = initialize () in 
 	let b = new board p a in 
 	b#init ();
 	b#draw (); 
-	loop_at_exit [Button_down; Key_pressed] (fun s -> b#react s; clear_graph (); b#draw ());;
+	loop_at_exit [Button_down; Key_pressed] 
+    (fun s -> b#react s; clear_graph (); b#draw ());;
 
 listen ();;
 
