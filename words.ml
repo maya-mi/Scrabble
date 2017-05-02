@@ -59,7 +59,6 @@ let buildTable (unit) : (string, int) Hashtbl.t  =
   result
 ;;
 
-
 let dict = buildTable () ;;
 
 
@@ -91,6 +90,8 @@ let getScore (input : word) : int =
 let isWord (test : word) : bool =
   mem dict (String.lowercase (toString test))
 ;;
+
+let rec print (w : word) : unit = List.iter (fun {id = a; score = _} -> print_string (String.make 1 a)) w
 
 (*let s = makeWord "zoo" in
 print_int (getScore s) ;;*)
