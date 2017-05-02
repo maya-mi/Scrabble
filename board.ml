@@ -336,6 +336,7 @@ class board (players: int) (ais:int) =
        List.iter (fun (x,y) -> print_int x; print_string " "; print_int y; print_endline "") !bPlay;
        placeTiles !bPlay !bCorr;
        ignore (this#is_valid ());
+       turnScore <- !bScore;
        this#refresh ()
 	 (*) this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
