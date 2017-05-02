@@ -198,10 +198,11 @@ class board (players: int) (ais:int) =
 
 	(*Displays winner message, waits, exits the game*)
 	method endGame (winner: int) = 
+		this#draw ();
 		let rec delay (sec: float) : unit =
   			try ignore(Thread.delay sec)
  			with Unix.Unix_error _ -> delay sec in 
-		let msg = "PLAYER " ^ (string_of_int winner) ^ " WINS!" in
+		let msg = "PLAYER " ^ (string_of_int (winner + 1)) ^ " WINS!" in
 		moveto (cFRAMESIZE - 2 * length - 5) (cFRAMESIZE - 2 * length);
 		set_color black;
 		draw_string msg;
