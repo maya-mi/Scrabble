@@ -43,13 +43,13 @@ let initialize () =
   let p = player_loop () in 
   G.moveto (windowSize / 3) (2 * windowSize / 3);
   G.draw_string ((string_of_int p) ^ " players selected.");
-  if p = 4 then (G.draw_string " 0 AI assigned"; delay 1.; (1, 0)) else
+  if p = 1 then (G.draw_string " 0 AI assigned"; delay 1.; (1, 0)) else
   (G.moveto (windowSize / 3) (windowSize / 2);
-  G.draw_string ("Enter number of AI: [0-" ^ (string_of_int (4 - p)) ^ "]");
+  G.draw_string ("Enter number of AI: [0-" ^ (string_of_int (p - 1)) ^ "]");
   let rec ai_loop () = 
     try 
       (let k = int_of_string (Char.escaped (G.read_key ())) in 
-      if k >= 0 && k < 5 - p then k else ai_loop ();)
+      if k >= 0 && k < p then k else ai_loop ();)
     with Failure "int_of_string" -> ai_loop (); in 
   let a = ai_loop () in 
   G.moveto (windowSize / 3) (5 * windowSize / 12);
