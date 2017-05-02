@@ -228,13 +228,9 @@ class board (players: int) (ais:int) =
 	  this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
 	  draw_string "AI THINKING";
-	  let rec delay (sec: float) : unit =
-  			try ignore(Thread.delay sec)
- 			with Unix.Unix_error _ -> delay sec in
- 	   delay 300000.
-
+	  
 	  (*Holds the best play: coordinate list (x, y)*)
-	 (*) let best = ref [] in
+	  let best = ref [] in
 	  (*Holds tiles in the best play, in the same order as best*)
 	  let bPerm = ref [] in
 	  let bScore = ref 0 in
@@ -298,7 +294,7 @@ class board (players: int) (ais:int) =
           done;
         done;
       in (*List.iter tryMove perms;*)
-      for _x = 0 to 100000 do
+      for _x = 0 to 1000 do
       	standL <- shuffle standL;
         tryMove standL;
       done;
@@ -312,7 +308,7 @@ class board (players: int) (ais:int) =
 	  in
 	  setFinal play (!bPerm);
 	  ignore (this#is_valid ());
-	  this#refresh ()*)
+	  this#refresh ()
 
 
 
