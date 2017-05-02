@@ -584,17 +584,18 @@ class board (players: int) (ais:int) =
 	  hand.(5) <- new tile {id = 'e'; score = 1};
 	  hand.(6) <- new tile {id = 'z'; score = 10};
 	  let bScore = ref 0 in
-	  let bPerm = ref [] in
+	  let bCorr = ref [] in
+	  let bPlay = ref [] in
 	  let rep = ref 0 in
 	  let curWord = ref [] in
 	  let tryMove (order : int list): unit =
 	    curWord := [];
-	  (*)	print_int !rep; rep := !rep + 1; print_endline "";*)
+	  	print_int !rep; rep := !rep + 1; print_endline "";
 	    let pre, post = this#break 8 order [] in
 	    (*print_int ((List.length pre) + (List.length post));*)
 	    let best = ref [] in
 	    let corr = ref [] in
-	    let checkPlay () = 
+	    (*let checkPlay () = 
 	      validPos <- true;
 	  	  if List.length play = 0 then begin this#reset () end
 	  	  else begin
@@ -604,7 +605,7 @@ class board (players: int) (ais:int) =
 	  	  		bScore := turnScore;
 	  	    	bPerm := List.fold_left (fun acc (x, y) -> layout.(x).(y) :: acc) [] play end end;
 	        this#reset () end
-	    in
+	    in*)
 	    let rec compWord (back : bool) (hor : bool) (x1 : int) (y1 : int) (places : int list) : unit =
 	      match places with
 	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h = 7 then ()
@@ -626,6 +627,8 @@ class board (players: int) (ais:int) =
 	     for x = 0 to 14 do
 	      for y = 0 to 14 do
 	        if not layout.(x).(y)#isBlank then begin
+	        	play <- [];
+	        	corr := [];
 	        	compWord true true x y pre;
                 compWord false true x y post;
                 if isWord (this#stripLetters !curWord) then begin 
@@ -637,8 +640,13 @@ class board (players: int) (ais:int) =
                   in
                   placeTiles play !corr;
                   print (this#stripLetters !curWord); print_endline "";
-                  let attempt = getScore (this#stripLetters !curWord) in if attempt > !bScore then begin bScore := attempt; bPerm := !curWord end end;
-	        end
+                  if this#is_valid () then if turnScore > !bScore then 
+                    begin bScore := turnScore; bCorr := !corr; bPlay := play end;
+
+                 this#reset () end;
+                  (*let attempt = getScore (this#stripLetters !curWord) in if attempt > !bScore then begin bScore := attempt; bPerm := !curWord end end;
+                  this#reset ();*)
+	        end;
           done;
         done;
       in
@@ -654,22 +662,22 @@ class board (players: int) (ais:int) =
 	   checkPlay ();*)
 	   print_int !bScore;
 	   print_endline "";
-	   print (this#stripLetters !bPerm);
+	   print (this#stripLetters !bCorr);
 	   print_endline "";
-	   print_endline "done"
+	   print_endline "done";
 	   (*if isWord (this#stripLetters !curWord) then print_endline "yay" else print_endline "adfadf";
 	   print (this#stripLetters !curWord);*)
 	   (*for i = 0 to 14 do
 	     for x = 0 to 14 do
 	       layout.(x).(i)#print;
 	      done; done;*)
-	  (*) open_graph "";
+	   open_graph "";
 	   resize_window 750 750;
 	   this#draw ();
 	   let rec delay (sec: float) : unit =
   			try ignore(Thread.delay sec)
  			with Unix.Unix_error _ -> delay sec in
- 	   delay 300000.*)
+ 	   delay 300000.
 
 
 
