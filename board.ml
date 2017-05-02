@@ -265,31 +265,14 @@ class board (players: int) (ais:int) =
 	          if back then curWord := layout.(x1).(y1) :: !curWord else curWord := !curWord @ [layout.(x1).(y1)];
 	          if (not back) && hor then compWord back hor (x1 + 1) y1 places
 	          else if back && hor then compWord back hor (x1 - 1) y1 places
-	          else if (not back) && not hor then compWord back hor x1 (y1 - 1) places
+	          else if (not back) && (not hor) then compWord back hor x1 (y1 - 1) places
 	          else compWord back hor x1 (y1 + 1) places end
 	      | [] -> ()
 	     in
 	     for x = 0 to 14 do
 	      for y = 0 to 14 do
 	        if not layout.(x).(y)#isBlank then begin
-	        	play <- [];
-	        	corr := [];
-	        	validPos <- true;
-	        	compWord true false x y pre;
-                compWord false false x y post;
-                if isWord (this#stripLetters !curWord) then begin 
-                  let rec placeTiles (poses : (int*int) list) (tilesTP : tile list) : unit =
-                    match poses, tilesTP with
-                    | (x,y) :: t1, h :: t2 -> layout.(x).(y) <- h; placeTiles t1 t2
-                    | [], [] -> ()
-                    | _ -> failwith "unexpected behavior"
-                  in
-                  placeTiles play !corr;
-                  List.iter (fun (x,y) -> print_int x; print_string " "; print_int y; print_endline "") play;
-                  print (this#stripLetters !curWord); print_endline "";
-                  if this#is_valid () then print (this#stripLetters !curWord); print_endline ""; begin  if turnScore > !bScore then 
-                    begin bScore := turnScore; bCorr := !corr; bPlay := play end end;
-                 this#reset () end;
+	        	
                  play <- [];
 	        	corr := [];
 	        	validPos <- true;
