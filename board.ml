@@ -228,20 +228,26 @@ class board (players: int) (ais:int) =
 	  this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
 	  draw_string "AI THINKING";
+	  let rec delay (sec: float) : unit =
+  			try ignore(Thread.delay sec)
+ 			with Unix.Unix_error _ -> delay sec in
+ 	   delay 300000.
 
 	  (*Holds the best play: coordinate list (x, y)*)
-	  let best = ref [] in
+	 (*) let best = ref [] in
 	  (*Holds tiles in the best play, in the same order as best*)
 	  let bPerm = ref [] in
 	  let bScore = ref 0 in
 	  let curWord = ref [] in
-	  let checkPlay curPerm = 
-	  	if List.length play = 0 then this#reset () 
+	  let checkPlay () = 
+	    validPos <- true;
+	  	if List.length play = 0 then begin this#reset () end
 	  	else begin
 	  	  if this#is_valid () then begin
-	  	  	if turnScore > !bScore then
-	  	  		(best := play; 
-	  	    	bPerm := List.fold_left (fun acc (x, y) -> layout.(x).(y) :: acc) [] play) end;
+	  	  	if turnScore > !bScore then begin
+	  	  		best := play;
+	  	  		bScore := turnScore;
+	  	    	bPerm := List.fold_left (fun acc (x, y) -> layout.(x).(y) :: acc) [] play end end;
 	      this#reset () end
 	  in
 	  let tryMove (order : int list): unit =
@@ -254,27 +260,25 @@ class board (players: int) (ais:int) =
 	          layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;
               if (not back) && hor then compWord back hor (x1 + 1) y1 t
 	          else if back && hor then compWord back hor (x1 - 1) y1 t
-	          else if (not back) && (not hor) then compWord back hor x1 (y1 + 1) t
-	          else compWord back hor x1 (y1 - 1) t end
+	          else if (not back) && (not hor) then compWord back hor x1 (y1 - 1) t
+	          else compWord back hor x1 (y1 + 1) t end
             else begin 
 	          if back then curWord := layout.(x1).(y1) :: !curWord else curWord := !curWord @ [layout.(x1).(y1)];
 	          if (not back) && hor then compWord back hor (x1 + 1) y1 places
 	          else if back && hor then compWord back hor (x1 - 1) y1 places
-	          else if (not back) && not hor then compWord back hor x1 (y1 + 1) places
-	          else compWord back hor x1 (y1 - 1) places end
+	          else if (not back) && not hor then compWord back hor x1 (y1 - 1) places
+	          else compWord back hor x1 (y1 + 1) places end
 	      | [] -> ()
-	    in
+	   in
 	    for x = 0 to 14 do
 	      for y = 0 to 14 do
 	        if not layout.(x).(y)#isBlank then begin 
-	         (curWord := [layout.(x).(y)];
-	          compWord true true (x - 1) y pre;
-              compWord false true (x + 1) y post;
-              if isWord (this#stripLetters !curWord) then checkPlay order;
-              curWord := [layout.(x).(y)];
-              compWord true false x (y - 1) pre;
-              compWord false false x (y + 1) post;
-              if isWord (this#stripLetters !curWord) then checkPlay order;)
+	         (compWord true true x y pre;
+              compWord false true x y post;
+              if isWord (this#stripLetters !curWord) then checkPlay () else this#reset ();
+              compWord true false x y pre;
+              compWord false false x y post;
+              if isWord (this#stripLetters !curWord) then checkPlay () else this#reset ();)
 	        end 
 
 	      (*if not layout.(x).(y)#isBlank then
@@ -294,7 +298,7 @@ class board (players: int) (ais:int) =
           done;
         done;
       in (*List.iter tryMove perms;*)
-      for _x = 0 to 100 do
+      for _x = 0 to 100000 do
       	standL <- shuffle standL;
         tryMove standL;
       done;
@@ -308,7 +312,7 @@ class board (players: int) (ais:int) =
 	  in
 	  setFinal play (!bPerm);
 	  ignore (this#is_valid ());
-	  this#refresh ()
+	  this#refresh ()*)
 
 
 
@@ -417,7 +421,7 @@ class board (players: int) (ais:int) =
 		done;
 	
 	(*Checks if vertical tangent tiles are valid at a given coordinate.
-	Augments turnscore*)
+	Augments turnScore*)
 	method vertNormal x y: bool = 
 		let wrd = ref [layout.(x).(y)] in 
 		this#addVerts wrd x y y;
@@ -426,7 +430,7 @@ class board (players: int) (ais:int) =
 		else List.length !wrd = 1 
 
 	(*Checks if horizontal tangent tiles are valid at a given coordinate.
-	Augments turnscore*)
+	Augments turnScore*)
 	method horNormal x y: bool = 
 		let wrd = ref [layout.(x).(y)] in 
 		this#addHor wrd y x x;
@@ -467,6 +471,7 @@ class board (players: int) (ais:int) =
 			(let wrd = ref [] in 
 			let perp = ref true in 
 			for i = (listFind min ys) to (listFind max ys) do
+			    print_int 10000;
 				wrd := layout.(x).(i) :: !wrd;
 				if List.mem (x, i) play then 
 					(perp := !perp && this#horNormal x i;)
@@ -474,6 +479,7 @@ class board (players: int) (ais:int) =
 			this#addVerts wrd x (listFind max ys) (listFind min ys);
 			turnScore <- turnScore + (this#score !wrd);
 			if List.length play = 7 then turnScore <- turnScore + 50;
+
 			isWord (this#stripLetters !wrd) && !perp && validPos)
 		(*Horizontal case*)
 		else if ySame then 
@@ -564,16 +570,30 @@ class board (players: int) (ais:int) =
 
 	method test () =
 	  layout.(7).(7) <- new tile {id = 'a'; score = 1};
-	  layout.(7).(8) <- new tile {id = 't'; score = 1};
+	  layout.(8).(7) <- new tile {id = 't'; score = 1};
 	  let hand = Array.make 7 blank in
 	  hand.(0) <- new tile {id = 'b'; score = 3};
 	  hand.(1) <- new tile {id = 'a'; score = 1};
-	  hand.(2) <- new tile {id = 'a'; score = 1};
-	  hand.(3) <- new tile {id = 'a'; score = 1};
-	  hand.(4) <- new tile {id = 'a'; score = 1};
-	  hand.(5) <- new tile {id = 'a'; score = 1};
-	  hand.(6) <- new tile {id = 'a'; score = 1};
-	  let curWord = ref [layout.(7).(8)] in
+	  hand.(2) <- new tile {id = 't'; score = 1};
+	  hand.(3) <- new tile {id = 'e'; score = 1};
+	  hand.(4) <- new tile {id = 'r'; score = 1};
+	  hand.(5) <- new tile {id = 'e'; score = 1};
+	  hand.(6) <- new tile {id = 'f'; score = 1};
+	  let curWord = ref [] in
+	  let bPerm = ref [] in
+	  let best = ref [] in
+	  let bScore = ref 0 in
+	  let checkPlay () = 
+	    validPos <- true;
+	  	if List.length play = 0 then begin this#reset () end
+	  	else begin
+	  	  if this#is_valid () then begin
+	  	  	if turnScore > !bScore then begin
+	  	  		best := play;
+	  	  		bScore := turnScore;
+	  	    	bPerm := List.fold_left (fun acc (x, y) -> layout.(x).(y) :: acc) [] play end end;
+	      this#reset () end
+	  in
 	  let rec compWord (back : bool) (hor : bool) (x1 : int) (y1 : int) (places : int list) : unit =
 	      match places with
 	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h = 7 then ()
@@ -582,21 +602,35 @@ class board (players: int) (ais:int) =
 	          layout.(x1).(y1) <- hand.(h); play <- (x1, y1) :: play;
               if (not back) && hor then compWord back hor (x1 + 1) y1 t
 	          else if back && hor then compWord back hor (x1 - 1) y1 t
-	          else if (not back) && (not hor) then compWord back hor x1 (y1 + 1) t
-	          else compWord back hor x1 (y1 - 1) t end
+	          else if (not back) && (not hor) then compWord back hor x1 (y1 - 1) t
+	          else compWord back hor x1 (y1 + 1) t end
             else begin 
 	          if back then curWord := layout.(x1).(y1) :: !curWord else curWord := !curWord @ [layout.(x1).(y1)];
 	          if (not back) && hor then compWord back hor (x1 + 1) y1 places
 	          else if back && hor then compWord back hor (x1 - 1) y1 places
-	          else if (not back) && not hor then compWord back hor x1 (y1 + 1) places
-	          else compWord back hor x1 (y1 - 1) places end
+	          else if (not back) && not hor then compWord back hor x1 (y1 - 1) places
+	          else compWord back hor x1 (y1 + 1) places end
 	      | [] -> ()
 	   in
-	   compWord true true 7 8 [0; 1; 3; 7; 5];
-	   for i = 0 to 14 do
+	   compWord true false 8 7 [1; 0];
+	   compWord false false 8 7 [2; 3; 4];
+	   let printPlay (move : (int*int) list) : unit = List.iter (fun (x, y) -> print_int x; print_string " "; print_int y; print_endline "") play in
+	   printPlay play;
+	   checkPlay ();
+	   print_int !bScore;
+	   if isWord (this#stripLetters !curWord) then print_endline "yay" else print_endline "adfadf";
+	   print (this#stripLetters !curWord);
+	   (*for i = 0 to 14 do
 	     for x = 0 to 14 do
 	       layout.(x).(i)#print;
-	      done; done;
+	      done; done;*)
+	   open_graph "";
+	   resize_window 750 750;
+	   this#draw ();
+	   let rec delay (sec: float) : unit =
+  			try ignore(Thread.delay sec)
+ 			with Unix.Unix_error _ -> delay sec in
+ 	   delay 300000.
 
 
 

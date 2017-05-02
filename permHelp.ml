@@ -15,8 +15,10 @@ let rec perm1 p =
   match p with
   | [] -> [[]]
   | h::t -> combine h (perm1 t)
+
 ;;
 
 
 
-print_int (List.length (perm1 [0; 1; 2; 3; 4; 5; 6; 7; 8])) ;;
+
+(*print_int (List.length (perm1 [0; 1; 2; 3; 4; 5; 6; 7; 8])) ;;*)
