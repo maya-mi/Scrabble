@@ -427,7 +427,7 @@ class board (players: int) (ais:int) =
 	(*Advances instance variable turn to reflect next turn. Plays AI if appt*)
 	method advanceTurn () = 
 	 let rec help () = 
-		turn <- (turn + 1) mod (players - 1);
+		turn <- (turn + 1) mod (players);
 		if not reals.(turn) then (this#playAI hands.(turn); help ()); in 
 	 help ()
 
