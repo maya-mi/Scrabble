@@ -73,6 +73,8 @@ class board (players: int) (ais:int) =
 
 	(*Show special screen for help*)
 	val mutable help = false
+
+	val mutable standL = [0; 1; 2; 3; 4; 5; 6; 7; 8]
 	
 	val perms = perm1 [0; 1; 2; 3; 4; 5; 6; 7; 8]
 	(*Board coordinates for special tiles*)
@@ -559,7 +561,6 @@ class board (players: int) (ais:int) =
 	 		else (this#reset (); this#advanceTurn ());)
 	 	else if k = 'x' then raise Exit
 	 	
-<<<<<<< HEAD
 
 	method test () =
 	  layout.(7).(7) <- new tile {id = 'a'; score = 1};
@@ -602,24 +603,16 @@ class board (players: int) (ais:int) =
 
 
 
-=======
 	(*Responds to the graphics status passed in: delegates to mouseClick
 	or keyParse as appropriate*)
->>>>>>> 29f827d79360df913b16fd3c4dcd55420e14a102
 	method react (s: Graphics.status) = 
 		if s.keypressed then this#keyParse s.key
 		else this#mouseClick s.mouse_x s.mouse_y
 		
 
 
-<<<<<<< HEAD
-
 
 	end ;;
-=======
-	end 
-
->>>>>>> 29f827d79360df913b16fd3c4dcd55420e14a102
 
 
 (*let a = new board 1 1 in a#test () ;;*)
