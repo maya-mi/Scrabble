@@ -332,6 +332,7 @@ class board (players: int) (ais:int) =
                   in
        List.iter (fun (x,y) -> print_int x; print_string " "; print_int y; print_endline "") !bPlay;
        placeTiles !bPlay !bCorr;
+       ignore (this#is_valid ());
 	 (*) this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
 	  draw_string "AI THINKING";
