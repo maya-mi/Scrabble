@@ -148,7 +148,7 @@ class board (players: int) (ais:int) =
 
     method break (point : int) (input : int list) (acc : int list) : (int list) * (int list) =
       match input with
-      | h :: t -> if h = point then (acc, t) else this#break point t (acc @ [h])
+      | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
       | [] -> failwith "False case"
 (*layout.(x1).(y1) = blank then (layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;*)
 	method playAI posHand =
@@ -161,56 +161,71 @@ class board (players: int) (ais:int) =
 	  (*Holds tiles in the best play, in the same order as best*)
 	  let bPerm = ref [] in
 	  let bScore = ref 0 in
+	  let curWord = ref [] in
 	  let checkPlay curPerm = 
 	  	if List.length play = 0 then this#reset () 
-	  	else 
-	  		(if this#is_valid () 
-	  		then (if turnScore > !bScore then (best := play; 
-	  			bPerm := (List.fold_left (fun acc (x, y) -> layout.(x).(y) :: acc) [] play)));
-	        this#reset ())
+	  	else begin
+	  	  if this#is_valid () then begin
+	  	  	if turnScore > !bScore then
+	  	  		(best := play; 
+	  	    	bPerm := List.fold_left (fun acc (x, y) -> layout.(x).(y) :: acc) [] play) end;
+	      this#reset () end
 	  in
 	  let tryMove (order : int list): unit =
 	    let pre, post = this#break 8 order [] in
 	    let rec compWord (back : bool) (hor : bool) (x1 : int) (y1 : int) (places : int list) : unit =
 	      match places with
-	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h = 7 then () else
-	        (if layout.(x1).(y1)#isBlank then 
-	        	(layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;
-              	if not back && hor then compWord back hor (x1 + 1) y1 t
-	            else if back && hor then compWord back hor (x1 - 1) y1 t
-	          	else if not back && not hor then compWord back hor x1 (y1 + 1) t
-	          	else compWord back hor x1 (y1 - 1) t)
-	        else 
-	          (if not back && hor then compWord back hor (x1 + 1) y1 places
+	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h = 7 then ()
+	        else if layout.(x1).(y1)#isBlank then begin
+	          if back then curWord := posHand.(h) :: !curWord else curWord := !curWord @ [posHand.(h)];
+	          layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;
+              if (not back) && hor then compWord back hor (x1 + 1) y1 t
+	          else if back && hor then compWord back hor (x1 - 1) y1 t
+	          else if (not back) && (not hor) then compWord back hor x1 (y1 + 1) t
+	          else compWord back hor x1 (y1 - 1) t end
+            else begin 
+	          if back then curWord := layout.(x1).(y1) :: !curWord else curWord := !curWord @ [layout.(x1).(y1)];
+	          if (not back) && hor then compWord back hor (x1 + 1) y1 places
 	          else if back && hor then compWord back hor (x1 - 1) y1 places
-	          else if not back && not hor then compWord back hor x1 (y1 + 1) places
-	          else compWord back hor x1 (y1 - 1) places))
+	          else if (not back) && not hor then compWord back hor x1 (y1 + 1) places
+	          else compWord back hor x1 (y1 - 1) places end
 	      | [] -> ()
-	    in 
+	    in
 	    for x = 0 to 14 do
 	      for y = 0 to 14 do
-	      if not layout.(x).(y)#isBlank then
+	        if not layout.(x).(y)#isBlank then begin 
+	         (curWord := [layout.(x).(y)];
+	          compWord true true (x - 1) y pre;
+              compWord false true (x + 1) y post;
+              if isWord (this#stripLetters !curWord) then checkPlay order;
+              curWord := [layout.(x).(y)];
+              compWord true false x (y - 1) pre;
+              compWord false false x (y + 1) post;
+              if isWord (this#stripLetters !curWord) then checkPlay order;)
+	        end 
+
+	      (*if not layout.(x).(y)#isBlank then
 	        let _, culTiles = (List.fold_left (fun acc index ->
 	          let stop, aList = acc in 
 	          if stop then acc else if index = 7 then true, aList 
 	          else if index = 8 then stop, aList @ [layout.(x).(y)] 
 	          else stop, aList @ [posHand.(index)]) (false, []) order) in
 	        if (List.find_all (fun cur -> cur = 7) pre) <> [] then 
-	        (if isWord (this#stripLetters culTiles) then
-            compWord true true (x - 1) y pre;
+	        (if isWord (this#stripLetters culTiles) then*)
+           (*) compWord true true (x - 1) y pre;
             compWord false true (x + 1) y post ;
             checkPlay order ;
             compWord true false x (y - 1) pre ;
             compWord false false x (y + 1) post ;
-            checkPlay order;)
+            checkPlay order;*)
           done;
         done;
       in (*List.iter tryMove perms;*)
-      (*for _x = 0 to 50000 do
+      for _x = 0 to 100 do
       	standL <- shuffle standL;
         tryMove standL;
-      done;*)
-      List.iter tryMove perms ;
+      done;
+     (*) List.iter tryMove perms ;*)
       play <- !best;
       let rec setFinal (coords : (int*int) list) tiles : unit =
       	match coords, tiles with
@@ -480,6 +495,47 @@ class board (players: int) (ais:int) =
 	 	else if k = 'x' then raise Exit
 	 	
 
+	method test () =
+	  layout.(7).(7) <- new tile {id = 'a'; score = 1};
+	  layout.(7).(8) <- new tile {id = 't'; score = 1};
+	  let hand = Array.make 7 blank in
+	  hand.(0) <- new tile {id = 'b'; score = 3};
+	  hand.(1) <- new tile {id = 'a'; score = 1};
+	  hand.(2) <- new tile {id = 'a'; score = 1};
+	  hand.(3) <- new tile {id = 'a'; score = 1};
+	  hand.(4) <- new tile {id = 'a'; score = 1};
+	  hand.(5) <- new tile {id = 'a'; score = 1};
+	  hand.(6) <- new tile {id = 'a'; score = 1};
+	  let curWord = ref [layout.(7).(8)] in
+	  let rec compWord (back : bool) (hor : bool) (x1 : int) (y1 : int) (places : int list) : unit =
+	      match places with
+	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h = 7 then ()
+	        else if layout.(x1).(y1)#isBlank then begin
+	          if back then curWord := hand.(h) :: !curWord else curWord := !curWord @ [hand.(h)];
+	          layout.(x1).(y1) <- hand.(h); play <- (x1, y1) :: play;
+              if (not back) && hor then compWord back hor (x1 + 1) y1 t
+	          else if back && hor then compWord back hor (x1 - 1) y1 t
+	          else if (not back) && (not hor) then compWord back hor x1 (y1 + 1) t
+	          else compWord back hor x1 (y1 - 1) t end
+            else begin 
+	          if back then curWord := layout.(x1).(y1) :: !curWord else curWord := !curWord @ [layout.(x1).(y1)];
+	          if (not back) && hor then compWord back hor (x1 + 1) y1 places
+	          else if back && hor then compWord back hor (x1 - 1) y1 places
+	          else if (not back) && not hor then compWord back hor x1 (y1 + 1) places
+	          else compWord back hor x1 (y1 - 1) places end
+	      | [] -> ()
+	   in
+	   compWord true true 7 8 [0; 1; 3; 7; 5];
+	   for i = 0 to 14 do
+	     for x = 0 to 14 do
+	       layout.(x).(i)#print;
+	      done; done;
+
+
+
+
+
+
 	method react (s: Graphics.status) = 
 		if s.keypressed then this#keyParse s.key
 		else this#mouseClick s.mouse_x s.mouse_y
@@ -488,8 +544,8 @@ class board (players: int) (ais:int) =
 
 
 
-	end 
+	end ;;
 
 
-
+(*let a = new board 1 1 in a#test () ;;*)
 	

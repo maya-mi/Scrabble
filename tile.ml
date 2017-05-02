@@ -28,6 +28,8 @@ class tile  ({id; score}: letter) =
  	method getX = x
  	method getY = y
 
+ 	method print = print_char ch; print_endline ""
+
  	method isBlank = ch = ' '
 
  	method click = isClicked <- true

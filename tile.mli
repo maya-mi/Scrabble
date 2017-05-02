@@ -8,7 +8,7 @@ class tile : letter -> object
 	method getid : char
 	method getscore: int
 	method getLetter: letter 
-
+	method print : unit
 	method click : unit
 	method unclick : unit
 
