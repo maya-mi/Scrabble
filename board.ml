@@ -220,7 +220,7 @@ class board (players: int) (ais:int) =
 
 
 	(*AI FUNCTIONS*)
-<<<<<<< HEAD
+
     method break (point : int) (input : int list) (acc : int list) : (int list) * (int list) =
       match input with
       | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
@@ -439,9 +439,6 @@ class board (players: int) (ais:int) =
 	  	| h :: t, (x,y) :: t1 -> layout.(x).(y) <- posHand.(h); putBack t t1
 	  in putBack !bPerm !best*)
 
-=======
-	method playAI _ = ();
->>>>>>> 37594d92721a364aac17e9ce26ddd311c37e7540
 
 
 
