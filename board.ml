@@ -228,9 +228,6 @@ class board (players: int) (ais:int) =
 	  this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
 	  draw_string "AI THINKING";
-	  for i = 0 to 10000000 do
-	    print_int 1;
-	   done;
 	  let rec delay (sec: float) : unit =
   			try ignore(Thread.delay sec)
  			with Unix.Unix_error _ -> delay sec in
