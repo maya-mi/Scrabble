@@ -256,25 +256,33 @@ class board (players: int) (ais:int) =
       | h :: t -> if h = 7 then acc else this#cutPost7 t (acc @ [h])
       | [] -> failwith "unexpected 7 behavior"
 
-
+   (* determines the move for the ai to make *)
 	method playAI () =
 	  this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
 	  draw_string "AI THINKING";
 	  let prePass = passes in
+	  (* saves the best score and corresponding play over all searches*)
       let bScore = ref 0 in
       let bPlay = ref [] in
       let tryMove (order : int list) isHorizontal : unit =
+        (* word accumulated along main axis *)
         let curWord = ref [] in
         let curPlay = ref [] in
+        (* cuts off permutation at 7, determines length of play *)
         let newOrder = this#cutPost7 order [] in
+        (* 8 is break point determining how much goes before, after tile *)
+        (* doesn't make sense to play if there is no break point (ie it came after 7) *)
         if List.find_all (fun alpha -> alpha = 8) newOrder = [] then () else begin
           let pre, post = this#break 8 newOrder [] in
+          (* must play on cur square via pre *)
           if List.length pre = 0 then () else begin
+            (* recursively lays down tiles and adds tiles along main axis into curWord *)
             let rec placeTiles ((xv, yv) : int * int) ((x1, y1) : int*int) (indexes : int list) : unit =
               match indexes with
               | [] -> 
                 if x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14 then begin
+                  (* if not blank, we want add letter into our word *)
                   if not layout.(x1).(y1)#isBlank then begin
                     if xv = 1 then begin curWord := !curWord @ [layout.(x1).(y1)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) [] end
                     else if xv = -1 then begin curWord := layout.(x1).(y1) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) [] end
@@ -285,6 +293,7 @@ class board (players: int) (ais:int) =
                 else ()
               | h :: t -> 
                 if x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14 then begin
+                  (* if no tile here then we want to remember to lay tile down there later *)
                   if layout.(x1).(y1)#isBlank then begin
           	        curPlay := (h, hands.(turn).(h), (x1, y1)) :: !curPlay;
                     if xv = 1 then begin curWord := !curWord @ [hands.(turn).(h)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
@@ -304,30 +313,36 @@ class board (players: int) (ais:int) =
               for y = 0 to 14 do
                 curWord := [];
                 curPlay := [];
+                (* validating if adjacent to played tile *)
                 if (this#validating x y && layout.(x).(y)#isBlank) then begin
                   (if isHorizontal then begin
+                  	(* places tile after start with post, positive x velocity *)
                     placeTiles (1, 0) (x + 1, y) post;
+                    (* pre, negative x velocity *)
                     placeTiles (-1, 0) (x, y) pre;
                   end
                   else begin
-              	    placeTiles (0, 1) (x, y) pre;
-              	    placeTiles (0, -1) (x, y - 1) post;
+                  	(* same, except in the y *)
+              	    placeTiles (0, -1) (x, y) pre;
+              	    placeTiles (0, 1) (x, y + 1) post;
                   end);
+                  (* a bare minimum is that word along main axis must be word *)
                   if isWord (this#stripLetters !curWord) then begin
+                  	(* lays stored tiles onto board, adds relevent squares to play *)
 				    List.iter (fun (h, t, (x1, y1)) ->
-				      layout.(x1).(y1) <- new tile {id = hands.(turn).(h)#getid; score = hands.(turn).(h)#getscore};
+				      (*layout.(x1).(y1) <- new tile {id = hands.(turn).(h)#getid; score = hands.(turn).(h)#getscore};*)
+				      this#inheritscoring x y t;
+				      layout.(x1).(y1) <- hands.(turn).(h);
 					  play <- (x1, y1) :: play;
 					  ) !curPlay;
                     validPos <- true;
+                    (* uses general scoring function *)
                     if this#is_valid () then begin
                       if turnScore > !bScore then begin bPlay := !curPlay; bScore := turnScore; end
                     end;
-                  (*)  List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1)#setWordMult 1; layout.(x1).(y1)#setLetterMult 1; layout.(x1).(y1) <- blank) !curPlay;*)
-                    List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1)#setProp ' ' 1) !curPlay;
-                    turnScore <- 0;
+                    List.iter (fun (h, t, (x1, y1)) -> layout.(x1).(y1)<- blank; t#setLetterMult 1; t#setWordMult 1) !curPlay;
                     this#restoreSpecials ();
                     this#reset ();
-                    play <- [];
                   end
                 end
               done;
@@ -335,15 +350,19 @@ class board (players: int) (ais:int) =
           end
         end
         in
+        (* tries 20000 different random permutations *)
         for _i = 0 to 20000 do
           standL <- shuffle standL;
           tryMove standL true;
           tryMove standL false;
         done;
+        (* resets board state *)
         this#reset ();
+        (* passes inadvertenly changed by  *)
         passes <- prePass;
         validPos <- true;
-        List.iter (fun (h, t, (x1, y1)) -> this#inheritscoring x1 y1 t; layout.(x1).(y1) <- t; play <- (x1, y1) :: play; hands.(turn).(h) <- blank) !bPlay;
+        List.iter (fun (h, t, (x1, y1)) -> this#inheritscoring x1 y1 t;
+          layout.(x1).(y1) <- t; play <- (x1, y1) :: play; hands.(turn).(h) <- blank) !bPlay;
         if List.length play = 0 then this#pass ()
         else begin
           (if this#is_valid () then () else failwith "fuck");
