@@ -365,9 +365,9 @@ class board (players: int) (ais:int) =
 				let y = mouse_y / length - 2 in
 				if (inRange x 0 14 && inRange y 0 14 && layout.(x).(y)#isBlank) then 
 					(let wm = layout.(x).(y)#getWordMult in 
-					if wm <> 1 then hands.(turn).(savedQ)#setWordMult wm;
+					hands.(turn).(savedQ)#setWordMult wm;
 					let lm = layout.(x).(y)#getLetterMult in 
-					if lm <> 1 then hands.(turn).(savedQ)#setLetterMult lm;
+					hands.(turn).(savedQ)#setLetterMult lm;
 					layout.(x).(y) <- hands.(turn).(savedQ);
 					hands.(turn).(savedQ) <- blank;
 					play <- (x, y):: play;
