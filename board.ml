@@ -330,7 +330,7 @@ class board (players: int) (ais:int) =
                     if this#is_valid () then begin
                       if turnScore > !bScore then begin bPlay := !curPlay; bScore := turnScore; end
                     end;
-                    List.iter (fun (h, t, (x1, y1)) -> layout.(x1).(y1)<- blank; 
+                    List.iter (fun (_, t, (x1, y1)) -> layout.(x1).(y1)<- blank; 
                       t#setLetterMult 1; t#setWordMult 1) !curPlay;
                     this#restoreSpecials ();
                     this#reset ();
