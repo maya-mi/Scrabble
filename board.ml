@@ -236,10 +236,6 @@ class board (players: int) (ais:int) =
         let rec placeTiles (isHor : bool) (forward : bool) =*)
 
 	(*AI FUNCTIONS*)
-<<<<<<< HEAD
-=======
-
->>>>>>> df151179b74adbd24b1dae4b1e7bb136e1675929
     method break (point : int) (input : int list) (acc : int list) : (int list) * (int list) =
       match input with
       | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
@@ -326,14 +322,17 @@ class board (players: int) (ais:int) =
           end
         end
         in
-        for _i = 0 to 20000 do
+        for _i = 0 to 0 do
           standL <- shuffle standL;
           tryMove standL true;
           tryMove standL false;
         done;
         List.iter (fun (t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play) !bPlay;
-        ignore (this#is_valid ());
-        this#refresh ()
+        if List.length play = 0 then this#pass ()
+        else begin
+          ignore (this#is_valid ());
+          this#refresh ()
+        end
 
 
 
@@ -558,7 +557,6 @@ class board (players: int) (ais:int) =
 
 
 	method pass () = 
-		passes <- passes + 1; 
 	 	if passes = players then 
 	 		(this#reset (); this#endGame (this#findWinner ()))
 	 	else (this#reset (); this#advanceTurn ())
