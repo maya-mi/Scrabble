@@ -12,6 +12,8 @@ class tile : letter -> object
 	method click : unit
 	method unclick : unit
 
+	method setProp: char -> int -> unit
+
 	method setWordMult: int -> unit
 	method getWordMult: int
 

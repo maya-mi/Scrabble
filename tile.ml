@@ -28,6 +28,10 @@ class tile  ({id; score}: letter) =
  	method getX = x
  	method getY = y
 
+ 	method setProp c s = ch <- c; score <- s
+
+
+
  	method print = print_char ch; print_endline ""
 
  	method isBlank = ch = ' '

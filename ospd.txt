@@ -3153,7 +3153,6 @@ apyrases
 apyretic
 aqua
 aquacade
-aquae
 aquanaut
 aquaria
 aquarial

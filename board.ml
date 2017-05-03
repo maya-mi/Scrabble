@@ -144,6 +144,15 @@ class board (players: int) (ais:int) =
 		done
 
 	method restoreSpecials () = 
+		let blank = new tile {id = char_of_int 32; score = 0} in
+		let w2 = (new tile {id = char_of_int 32; score = 0}) in
+		w2#setWordMult 2;
+		let l2 = (new tile {id = char_of_int 32; score = 0}) in
+		l2#setLetterMult 2;
+		let w3 = (new tile {id = char_of_int 32; score = 0}) in 
+		w3#setWordMult 3;
+		let l3 = (new tile {id = char_of_int 32; score = 0}) in
+		l3#setLetterMult 3;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- l2) l2s;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w3) w3s;
@@ -236,8 +245,117 @@ class board (players: int) (ais:int) =
         let rec placeTiles (isHor : bool) (forward : bool) =*)
 
 	(*AI FUNCTIONS*)
- 
 
+    method break (point : int) (input : int list) (acc : int list) : (int list) * (int list) =
+      match input with
+      | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
+      | [] -> failwith "False case"
+
+    method cutPost7 (somePerm : int list) (acc : int list) =
+      match somePerm with
+      | h :: t -> if h = 7 then acc else this#cutPost7 t (acc @ [h])
+      | [] -> failwith "unexpected 7 behavior"
+
+
+	method playAI () =
+	  this#draw ();
+	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
+	  draw_string "AI THINKING";
+	  let prePass = passes in
+      let bScore = ref 0 in
+      let bPlay = ref [] in
+      let tryMove (order : int list) isHorizontal : unit =
+        let curWord = ref [] in
+        let curPlay = ref [] in
+        let newOrder = this#cutPost7 order [] in
+        if List.find_all (fun alpha -> alpha = 8) newOrder = [] then () else begin
+          let pre, post = this#break 8 newOrder [] in
+          if List.length pre = 0 then () else begin
+            let rec placeTiles ((xv, yv) : int * int) ((x1, y1) : int*int) (indexes : int list) : unit =
+              match indexes with
+              | [] -> 
+                if x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14 then begin
+                  if not layout.(x1).(y1)#isBlank then begin
+                    if xv = 1 then begin curWord := !curWord @ [layout.(x1).(y1)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) [] end
+                    else if xv = -1 then begin curWord := layout.(x1).(y1) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) [] end
+                    else if yv = 1 then begin curWord := layout.(x1).(y1) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) [] end
+                    else begin curWord := !curWord @ [layout.(x1).(y1)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) [] end
+                  end
+                end
+                else ()
+              | h :: t -> 
+                if x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14 then begin
+                  if layout.(x1).(y1)#isBlank then begin
+          	        curPlay := (h, hands.(turn).(h), (x1, y1)) :: !curPlay;
+                    if xv = 1 then begin curWord := !curWord @ [hands.(turn).(h)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+                    else if xv = -1 then begin curWord := hands.(turn).(h) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+                    else if yv = 1 then begin curWord := hands.(turn).(h) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+                    else begin curWord := !curWord @ [hands.(turn).(h)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+                  end
+                  else begin
+                    if xv = 1 then begin curWord := !curWord @ [layout.(x1).(y1)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) indexes end
+                    else if xv = -1 then begin curWord := layout.(x1).(y1) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) indexes end
+                    else if yv = 1 then begin curWord := layout.(x1).(y1) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) indexes end
+                    else begin curWord := !curWord @ [layout.(x1).(y1)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) indexes end
+                  end
+                end
+            in
+            for x = 0 to 14 do
+              for y = 0 to 14 do
+                curWord := [];
+                curPlay := [];
+                if (this#validating x y && layout.(x).(y)#isBlank) then begin
+                  (if isHorizontal then begin
+                    placeTiles (1, 0) (x + 1, y) post;
+                    placeTiles (-1, 0) (x, y) pre;
+                  end
+                  else begin
+              	    placeTiles (0, 1) (x, y) pre;
+              	    placeTiles (0, -1) (x, y - 1) post;
+                  end);
+                  if isWord (this#stripLetters !curWord) then begin
+				    List.iter (fun (h, t, (x1, y1)) ->
+				      layout.(x1).(y1) <- new tile {id = hands.(turn).(h)#getid; score = hands.(turn).(h)#getscore};
+					  play <- (x1, y1) :: play;
+					  ) !curPlay;
+                    validPos <- true;
+                    if this#is_valid () then begin
+                      if turnScore > !bScore then begin bPlay := !curPlay; bScore := turnScore; end
+                    end;
+                  (*)  List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1)#setWordMult 1; layout.(x1).(y1)#setLetterMult 1; layout.(x1).(y1) <- blank) !curPlay;*)
+                    List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1)#setProp ' ' 1) !curPlay;
+                    turnScore <- 0;
+                    this#restoreSpecials ();
+                    this#reset ();
+                    play <- [];
+                  end
+                end
+              done;
+            done;
+          end
+        end
+        in
+        for _i = 0 to 20000 do
+          standL <- shuffle standL;
+          tryMove standL true;
+          tryMove standL false;
+        done;
+        this#reset ();
+        passes <- prePass;
+        validPos <- true;
+        List.iter (fun (h, t, (x1, y1)) -> this#inheritscoring x1 y1 t; layout.(x1).(y1) <- t; play <- (x1, y1) :: play; hands.(turn).(h) <- blank) !bPlay;
+        if List.length play = 0 then this#pass ()
+        else begin
+          (if this#is_valid () then () else failwith "fuck");
+          this#refresh ()
+        end
+
+
+    method inheritscoring x y t = 
+      let wm = layout.(x).(y)#getWordMult in
+      t#setWordMult wm;
+      let lm = layout.(x).(y)#getLetterMult in
+      t#setLetterMult lm
 
 
 	(*A square is validating if it has at least one live neighbor; a single 
@@ -436,6 +554,7 @@ class board (players: int) (ais:int) =
 			hands.(turn).(i)#unclick;
 			hands.(turn).(i)#setWordMult 1;
 			hands.(turn).(i)#setLetterMult 1;
+			this#restoreSpecials ();
 		done	
 
 
