@@ -217,231 +217,121 @@ class board (players: int) (ais:int) =
 	  drawPile <- shuffle drawPile;
 	  List.iter (fun i -> hands.(turn).(i) <- this#pullTile ()) dumps;
 	  this#reset ();
+    
+    method valTile x y : bool = 
+      let validated = ref false in
+      if x - 1 >= 0 && y - 1 >= 0 then begin if not layout.(x - 1).(y - 1)#isBlank then validated := true end;
+      if x - 1 >= 0 && y + 1 <= 14 then begin if not layout.(x - 1).(y + 1)#isBlank then validated := true end;
+      if x + 1 <= 14 && y - 1 >= 0 then begin if not layout.(x + 1).(y - 1)#isBlank then validated := true end;
+      if x + 1 <= 14 && y + 1 <= 14 then begin if not layout.(x + 1).(y + 1)#isBlank then validated := true end;
+      !validated || (x = 7 && y = 7 && layout.(7).(7)#isBlank)
 
+    (*
+    let bScore = ref 0 in
+      let bPlay = ref [] in
+      let tryMove (order : int list) : unit =
+        let curWord = ref [] in
+        let newOrder = this#cutPost7 order [] in
+        let pre, post = this#break 8 newOrder [] in
+        let rec placeTiles (isHor : bool) (forward : bool) =*)
 
 	(*AI FUNCTIONS*)
-<<<<<<< HEAD
     method break (point : int) (input : int list) (acc : int list) : (int list) * (int list) =
       match input with
       | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
       | [] -> failwith "False case"
+
+    method cutPost7 (somePerm : int list) (acc : int list) =
+      match somePerm with
+      | h :: t -> if h = 7 then acc else this#cutPost7 t (acc @ [h])
+      | [] -> failwith "unexpected 7 behavior"
+
+
 	method playAI posHand =
 	  this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
 	  draw_string "AI THINKING";
-	  let bScore = ref 0 in
-	  let bCorr = ref [] in
-	  let bPlay = ref [] in
-	  let rep = ref 0 in
-	  let curWord = ref [] in
-	  let tryMove (order : int list): unit =
-	    curWord := [];
-	  	print_int !rep; rep := !rep + 1; print_endline "";
-	    let pre, post = this#break 8 order [] in
-	    (*print_int ((List.length pre) + (List.length post));*)
-	    let best = ref [] in
-	    let corr = ref [] in
-	    (*let checkPlay () = 
-	      validPos <- true;
-	  	  if List.length play = 0 then begin this#reset () end
-	  	  else begin
-	  	    if this#is_valid () then begin
-	  	      if turnScore > !bScore then begin
-	  	  		best := play;
-	  	  		bScore := turnScore;
-	  	    	bPerm := List.fold_left (fun acc (x, y) -> layout.(x).(y) :: acc) [] play end end;
-	        this#reset () end
-	    in*)
-	    let rec compWord (back : bool) (hor : bool) (x1 : int) (y1 : int) (places : int list) : unit =
-	      match places with
-	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h = 7 then ()
-	        else if layout.(x1).(y1)#isBlank then begin
-	          if back then curWord := posHand.(h) :: !curWord else curWord := !curWord @ [posHand.(h)];
-	          (*layout.(x1).(y1) <- hand.(h)*) play <- (x1, y1) :: play; corr := posHand.(h) :: !corr;
-              if (not back) && hor then compWord back hor (x1 + 1) y1 t
-	          else if back && hor then compWord back hor (x1 - 1) y1 t
-	          else if (not back) && (not hor) then compWord back hor x1 (y1 - 1) t
-	          else compWord back hor x1 (y1 + 1) t end
-            else begin 
-	          if back then curWord := layout.(x1).(y1) :: !curWord else curWord := !curWord @ [layout.(x1).(y1)];
-	          if (not back) && hor then compWord back hor (x1 + 1) y1 places
-	          else if back && hor then compWord back hor (x1 - 1) y1 places
-	          else if (not back) && (not hor) then compWord back hor x1 (y1 - 1) places
-	          else compWord back hor x1 (y1 + 1) places end
-	      | [] -> ()
-	     in
-	     for x = 0 to 14 do
-	      for y = 0 to 14 do
-	        if not layout.(x).(y)#isBlank then begin
-	        	
-                 play <- [];
-	        	corr := [];
-	        	validPos <- true;
-	        	compWord true true x y pre;
-                compWord false true x y post;
-                if isWord (this#stripLetters !curWord) then begin 
-                  let rec placeTiles (poses : (int*int) list) (tilesTP : tile list) : unit =
-                    match poses, tilesTP with
-                    | (x,y) :: t1, h :: t2 -> layout.(x).(y) <- h; placeTiles t1 t2
-                    | [], [] -> ()
-                    | _ -> failwith "unexpected behavior"
-                  in
-                  placeTiles play !corr;
-                  List.iter (fun (x,y) -> print_int x; print_string " "; print_int y; print_endline "") play;
-                  print (this#stripLetters !curWord); print_endline "";
-                  if this#is_valid () then print (this#stripLetters !curWord); print_endline ""; begin  if turnScore > !bScore then 
-                    begin bScore := turnScore; bCorr := !corr; bPlay := play end end;
-                 this#reset () end;
-                  (*let attempt = getScore (this#stripLetters !curWord) in if attempt > !bScore then begin bScore := attempt; bPerm := !curWord end end;
-                  this#reset ();*)
-	        end;
-          done;
+      let bScore = ref 0 in
+      let bPlay = ref [] in
+      let rep = ref 0 in
+      let tryMove (order : int list) isHorizontal : unit =
+        print_int !rep; rep := !rep + 1; print_endline "";
+        let curWord = ref [] in
+        let curPlay = ref [] in
+        let newOrder = this#cutPost7 order [] in
+        if List.find_all (fun alpha -> alpha = 8) newOrder = [] then () else begin
+          let pre, post = this#break 8 newOrder [] in
+          if List.length pre = 0 then () else begin
+            let rec placeTiles ((xv, yv) : int * int) ((x1, y1) : int*int) (indexes : int list) : unit =
+              match indexes with
+              | [] -> 
+                if x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14 then begin
+                  if not layout.(x1).(y1)#isBlank then begin
+                    if xv = 1 then begin curWord := !curWord @ [layout.(x1).(y1)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) [] end
+                    else if xv = -1 then begin curWord := layout.(x1).(y1) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) [] end
+                    else if yv = 1 then begin curWord := layout.(x1).(y1) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) [] end
+                    else begin curWord := !curWord @ [layout.(x1).(y1)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) [] end
+                  end
+                end
+                else ()
+              | h :: t -> 
+                if x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14 then begin
+                  if layout.(x1).(y1)#isBlank then begin
+          	        curPlay := (posHand.(h), (x1, y1)) :: !curPlay;
+                    if xv = 1 then begin curWord := !curWord @ [posHand.(h)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+                    else if xv = -1 then begin curWord := posHand.(h) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+                    else if yv = 1 then begin curWord := posHand.(h) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+                    else begin curWord := !curWord @ [posHand.(h)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+                  end
+                  else begin
+                    if xv = 1 then begin curWord := !curWord @ [layout.(x1).(y1)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) indexes end
+                    else if xv = -1 then begin curWord := layout.(x1).(y1) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) indexes end
+                    else if yv = 1 then begin curWord := layout.(x1).(y1) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) indexes end
+                    else begin curWord := !curWord @ [layout.(x1).(y1)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) indexes end
+                  end
+                end
+            in
+            for x = 0 to 14 do
+              for y = 0 to 14 do
+                curWord := [];
+                curPlay := [];
+                if this#valTile x y then begin
+                (*print_int x; print_string " "; print_int y; print_endline "";*)
+                  (if isHorizontal then begin
+                    placeTiles (1, 0) (x + 1, y) post;
+                    placeTiles (-1, 0) (x, y) pre;
+                  end
+                  else begin
+              	    placeTiles (0, 1) (x, y + 1) pre;
+              	    placeTiles (0, -1) (x, y) post;
+                  end);
+                  if isWord (this#stripLetters !curWord) then begin
+              	    print_int (List.length !curWord);
+                    List.iter (fun (t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play) !curPlay;
+                    validPos <- true;
+                    if this#is_valid () then begin
+                      if turnScore > !bScore then begin bPlay := !curPlay; bScore := turnScore; end
+                    end;
+                    List.iter (fun (_, (x1, y1)) -> layout.(x1).(y1) <- blank) !curPlay;
+                    this#reset ();
+                    play <- [];
+                  end
+                end
+              done;
+            done;
+          end
+        end
+        in
+        for _i = 0 to 20000 do
+          standL <- shuffle standL;
+          tryMove standL true;
+          tryMove standL false;
         done;
-      in
-      for _x = 0 to 100000 do
-      	standL <- shuffle standL;
-        tryMove standL;
-      done;
-      print_endline "ehadfa";
-	  (*) compWord true false 8 7 [1; 0];
-	   compWord false false 8 7 [2; 3; 4];
-	   let printPlay (move : (int*int) list) : unit = List.iter (fun (x, y) -> print_int x; print_string " "; print_int y; print_endline "") play in
-	   printPlay play;
-	   checkPlay ();*)
-	   print_int !bScore;
-	   print_endline "";
-	   print (this#stripLetters !bCorr);
-	   let rec placeTiles (poses : (int*int) list) (tilesTP : tile list) : unit =
-                    match poses, tilesTP with
-                    | (x,y) :: t1, h :: t2 -> layout.(x).(y) <- h; placeTiles t1 t2
-                    | [], [] -> ()
-                    | _ -> failwith "unexpected behavior"
-                  in
-       List.iter (fun (x,y) -> print_int x; print_string " "; print_int y; print_endline "") !bPlay;
-       placeTiles !bPlay !bCorr;
-       ignore (this#is_valid ());
-       turnScore <- !bScore;
-       this#refresh ()
-	 (*) this#draw ();
-	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
-	  draw_string "AI THINKING";
-	  
-	  (*Holds the best play: coordinate list (x, y)*)
-	  let best = ref [] in
-	  (*Holds tiles in the best play, in the same order as best*)
-	  let bPerm = ref [] in
-	  let bScore = ref 0 in
-	  let curWord = ref [] in
-	  let checkPlay () = 
-	    validPos <- true;
-	  	if List.length play = 0 then begin this#reset () end
-	  	else begin
-	  	  if this#is_valid () then begin
-	  	  	if turnScore > !bScore then begin
-	  	  		best := play;
-	  	  		bScore := turnScore;
-	  	    	bPerm := List.fold_left (fun acc (x, y) -> layout.(x).(y) :: acc) [] play end end;
-	      this#reset () end
-	  in
-	  let tryMove (order : int list): unit =
-	    let pre, post = this#break 8 order [] in
-	    let rec compWord (back : bool) (hor : bool) (x1 : int) (y1 : int) (places : int list) : unit =
-	      match places with
-	      | h :: t -> if not (x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14) || h = 7 then ()
-	        else if layout.(x1).(y1)#isBlank then begin
-	          if back then curWord := posHand.(h) :: !curWord else curWord := !curWord @ [posHand.(h)];
-	          layout.(x1).(y1) <- posHand.(h); play <- (x1, y1) :: play;
-              if (not back) && hor then compWord back hor (x1 + 1) y1 t
-	          else if back && hor then compWord back hor (x1 - 1) y1 t
-	          else if (not back) && (not hor) then compWord back hor x1 (y1 - 1) t
-	          else compWord back hor x1 (y1 + 1) t end
-            else begin 
-	          if back then curWord := layout.(x1).(y1) :: !curWord else curWord := !curWord @ [layout.(x1).(y1)];
-	          if (not back) && hor then compWord back hor (x1 + 1) y1 places
-	          else if back && hor then compWord back hor (x1 - 1) y1 places
-	          else if (not back) && not hor then compWord back hor x1 (y1 - 1) places
-	          else compWord back hor x1 (y1 + 1) places end
-	      | [] -> ()
-	   in
-	    for x = 0 to 14 do
-	      for y = 0 to 14 do
-	        if not layout.(x).(y)#isBlank then begin 
-	          let _, culTiles = (List.fold_left (fun acc index ->
-	            let stop, aList = acc in 
-	            if stop then acc else if index = 7 then true, aList 
-	            else if index = 8 then stop, aList @ [layout.(x).(y)] 
-	            else stop, aList @ [posHand.(index)]) (false, []) order) in
-	          if (List.find_all (fun cur -> cur = 7) pre) <> [] then 
-	          if isWord (this#stripLetters culTiles) then
-	         (compWord true true x y pre;
-              compWord false true x y post;
-              if isWord (this#stripLetters !curWord) then checkPlay () else this#reset ();
-              compWord true false x y pre;
-              compWord false false x y post;
-              if isWord (this#stripLetters !curWord) then checkPlay () else this#reset ();)
-	        end 
-
-	      (*if not layout.(x).(y)#isBlank then
-	        let _, culTiles = (List.fold_left (fun acc index ->
-	          let stop, aList = acc in 
-	          if stop then acc else if index = 7 then true, aList 
-	          else if index = 8 then stop, aList @ [layout.(x).(y)] 
-	          else stop, aList @ [posHand.(index)]) (false, []) order) in
-	        if (List.find_all (fun cur -> cur = 7) pre) <> [] then 
-	        (if isWord (this#stripLetters culTiles) then*)
-           (*) compWord true true (x - 1) y pre;
-            compWord false true (x + 1) y post ;
-            checkPlay order ;
-            compWord true false x (y - 1) pre ;
-            compWord false false x (y + 1) post ;
-            checkPlay order;*)
-          done;
-        done;
-      in (*List.iter tryMove perms;*)
-      for _x = 0 to 100000 do
-      	standL <- shuffle standL;
-        tryMove standL;
-      done;
-     (*) List.iter tryMove perms ;*)
-      play <- !best;
-      let rec setFinal (coords : (int*int) list) tiles : unit =
-      	match coords, tiles with
-      	| (x, y) :: t, h1 :: t1 -> let _ = layout.(x).(y) <- h1 in setFinal t t1
-	  	| [], [] -> ()
-	  	| _ -> failwith "improper behavior"
-	  in
-	  setFinal play (!bPerm);
-	  ignore (this#is_valid ());
-	  this#refresh ()*)
+        List.iter (fun (t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play) !bPlay;
+        ignore (this#is_valid ());
+        this#refresh ()
 
 
-
-
-	  	  (*if this#validating x y then
-	  	  let rec testMove (order : int list) (posX : int) (posY : int) : unit =
-	  	  	if posX >= 15 then (if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
-	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []) else
-	  	    match order with
-	  	    | [] -> if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
-	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []
-	  	    | h :: t -> if h == 7 then (if this#is_valid () then (if turnScore > !bScore then bScore := turnScore; best := play; bPerm := order) ;
-	  	    List.iter (fun cur -> let x,y = cur in layout.(x).(y) <- blank) play ; play <- []) 
-	  	    else if not layout.(posX).(posY)#isBlank then testMove order (posX + 1) posY else
-	  	   	  layout.(posX).(posY) <- posHand.(h); play <- (posX, posY) :: play; 
-	  	      testMove t (posX +1) posY
-	  	  in
-	  	  List.iter (fun cur -> testMove cur x y) perms
-	  	done;
-	  done;
-	  let rec putBack (perm : int list) poses : unit = 
-	  	match perm, poses with
-	  	| ([], []) -> ()
-	  	| h :: t, (x,y) :: t1 -> layout.(x).(y) <- posHand.(h); putBack t t1
-	  in putBack !bPerm !best*)
-
-=======
-	method playAI _ = ();
->>>>>>> 37594d92721a364aac17e9ce26ddd311c37e7540
 
 
 
@@ -649,8 +539,18 @@ class board (players: int) (ais:int) =
 	method advanceTurn () = 
 	 let rec help () = 
 		turn <- (turn + 1) mod (players);
-		if not reals.(turn) then (this#playAI hands.(turn); help ()); in 
+		if not reals.(turn) then (this#playAI hands.(turn); help ())
+     in 
 	 help ()
+
+
+	method test () =
+	  layout.(7).(7) <- new tile {id = 'a'; score = 2};
+	  for i = 0 to 14 do
+	    for x = 0 to 14 do
+	      if this#valTile i x then begin print_int i; print_string " "; print_int x; print_endline ""; end
+	    done;
+	  done;
 
 
 	method keyParse k = 
@@ -686,5 +586,6 @@ class board (players: int) (ais:int) =
 
 	end ;;
 
+(*let a = new board 1 1 in a#test () ;;*)
 
 	
