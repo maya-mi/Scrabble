@@ -292,7 +292,7 @@ class board (players: int) (ais:int) =
               for y = 0 to 14 do
                 curWord := [];
                 curPlay := [];
-                if this#valTile x y then begin
+                if (this#validating x y && layout.(x).(y)#isBlank) then begin
                 (*print_int x; print_string " "; print_int y; print_endline "";*)
                   (if isHorizontal then begin
                     placeTiles (1, 0) (x + 1, y) post;
@@ -303,7 +303,17 @@ class board (players: int) (ais:int) =
               	    placeTiles (0, -1) (x, y) post;
                   end);
                   if isWord (this#stripLetters !curWord) then begin
+<<<<<<< HEAD
                     List.iter (fun (_, t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play) !curPlay;
+=======
+              	    print_int (List.length !curWord);
+                    List.iter (fun (t, (x1, y1)) -> 
+                    	let loc = layout.(x1).(y1) in
+						t#setWordMult loc#getWordMult;
+						t#setLetterMult loc#getLetterMult; 
+						layout.(x1).(y1) <- t; 
+						play <- (x1, y1) :: play) !curPlay;
+>>>>>>> a67d19de71074cbc3cc3cffaaf7fae6534b29452
                     validPos <- true;
                     if this#is_valid () then begin
                       if turnScore > !bScore then begin bPlay := !curPlay; bScore := turnScore; end
@@ -344,7 +354,7 @@ class board (players: int) (ais:int) =
 		if y - 1 > -1 then (n := layout.(x).(y - 1) :: !n);
 		let playedTiles = List.map (fun (x, y) -> layout.(x).(y)) play in  
 		(x = 7 && y = 7) || List.length (List.filter 
-			(fun x -> not (List.mem x playedTiles || x#isBlank)) !n) > 0 
+			(fun x -> not (List.mem x playedTiles || x#isBlank)) !n) > 0
 
 	(*Looks for 3 behaviors: dumping, playing an already clicked tile on the
 	board, or selecting a tile from the hand to play on the board*)
