@@ -220,11 +220,11 @@ class board (players: int) (ais:int) =
     
     method valTile x y : bool = 
       let validated = ref false in
-      if x - 1 >= 0 && y - 1 >= 0 then begin if not layout.(x - 1).(y - 1)#isBlank then validated := true end;
-      if x - 1 >= 0 && y + 1 <= 14 then begin if not layout.(x - 1).(y + 1)#isBlank then validated := true end;
-      if x + 1 <= 14 && y - 1 >= 0 then begin if not layout.(x + 1).(y - 1)#isBlank then validated := true end;
-      if x + 1 <= 14 && y + 1 <= 14 then begin if not layout.(x + 1).(y + 1)#isBlank then validated := true end;
-      !validated || (x = 7 && y = 7 && layout.(7).(7)#isBlank)
+      if x - 1 >= 0 then begin if not layout.(x - 1).(y)#isBlank then validated := true end;
+      if x + 1 <= 14 then begin if not layout.(x + 1).(y)#isBlank then validated := true end;
+      if y + 1 <= 14 then begin if not layout.(x).(y + 1)#isBlank then validated := true end;
+      if y - 1 >= 0 then begin if not layout.(x).(y - 1)#isBlank then validated := true end;
+      (!validated && layout.(x).(y)#isBlank) || (x = 7 && y = 7 && layout.(7).(7)#isBlank)
 
     (*
     let bScore = ref 0 in
@@ -250,12 +250,9 @@ class board (players: int) (ais:int) =
 	method playAI posHand =
 	  this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
-	  draw_string "AI THINKING";
       let bScore = ref 0 in
       let bPlay = ref [] in
-      let rep = ref 0 in
       let tryMove (order : int list) isHorizontal : unit =
-        print_int !rep; rep := !rep + 1; print_endline "";
         let curWord = ref [] in
         let curPlay = ref [] in
         let newOrder = this#cutPost7 order [] in
@@ -277,7 +274,7 @@ class board (players: int) (ais:int) =
               | h :: t -> 
                 if x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14 then begin
                   if layout.(x1).(y1)#isBlank then begin
-          	        curPlay := (posHand.(h), (x1, y1)) :: !curPlay;
+          	        curPlay := (h, posHand.(h), (x1, y1)) :: !curPlay;
                     if xv = 1 then begin curWord := !curWord @ [posHand.(h)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
                     else if xv = -1 then begin curWord := posHand.(h) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
                     else if yv = 1 then begin curWord := posHand.(h) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
@@ -306,13 +303,12 @@ class board (players: int) (ais:int) =
               	    placeTiles (0, -1) (x, y) post;
                   end);
                   if isWord (this#stripLetters !curWord) then begin
-              	    print_int (List.length !curWord);
-                    List.iter (fun (t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play) !curPlay;
+                    List.iter (fun (_, t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play) !curPlay;
                     validPos <- true;
                     if this#is_valid () then begin
                       if turnScore > !bScore then begin bPlay := !curPlay; bScore := turnScore; end
                     end;
-                    List.iter (fun (_, (x1, y1)) -> layout.(x1).(y1) <- blank) !curPlay;
+                    List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1) <- blank) !curPlay;
                     this#reset ();
                     play <- [];
                   end
@@ -322,12 +318,12 @@ class board (players: int) (ais:int) =
           end
         end
         in
-        for _i = 0 to 0 do
+        for _i = 0 to 15000 do
           standL <- shuffle standL;
           tryMove standL true;
           tryMove standL false;
         done;
-        List.iter (fun (t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play) !bPlay;
+        List.iter (fun (h, t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play; posHand.(h) <- blank) !bPlay;
         if List.length play = 0 then this#pass ()
         else begin
           ignore (this#is_valid ());
