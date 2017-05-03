@@ -250,6 +250,7 @@ class board (players: int) (ais:int) =
 	method playAI posHand =
 	  this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
+	  draw_string "AI THINKING";
 	  let prePass = passes in
       let bScore = ref 0 in
       let bPlay = ref [] in
