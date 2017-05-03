@@ -236,6 +236,10 @@ class board (players: int) (ais:int) =
         let rec placeTiles (isHor : bool) (forward : bool) =*)
 
 	(*AI FUNCTIONS*)
+<<<<<<< HEAD
+=======
+
+>>>>>>> df151179b74adbd24b1dae4b1e7bb136e1675929
     method break (point : int) (input : int list) (acc : int list) : (int list) * (int list) =
       match input with
       | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
@@ -553,6 +557,13 @@ class board (players: int) (ais:int) =
 	  done;
 
 
+	method pass () = 
+		passes <- passes + 1; 
+	 	if passes = players then 
+	 		(this#reset (); this#endGame (this#findWinner ()))
+	 	else (this#reset (); this#advanceTurn ())
+
+
 	method keyParse k = 
 		if k = 'h' then help <- not help;
 		if k = ' ' then 
@@ -565,9 +576,7 @@ class board (players: int) (ais:int) =
 	  	  this#advanceTurn ())
 	    else if k = 'd' then dumping <- true
 	 	else if k = 'p' then (
-	 		passes <- passes + 1; 
-	 		if passes = players then this#endGame (this#findWinner ())
-	 		else (this#reset (); this#advanceTurn ());)
+	 		this#pass ();)
 	 	else if k = 'x' then raise Exit
 	 	
 
