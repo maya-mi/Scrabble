@@ -6,38 +6,10 @@ open Graphics;;
 let cFRAMESIZE = 750;;
 let length = cFRAMESIZE / 18;;
 
-(*Create the blank and special score tiles we will use to populate the board*)
+(*Create the blank tile we will use to populate the board*)
 let blank = new tile {id = char_of_int 32; score = 0};;
-let w2 = (new tile {id = char_of_int 32; score = 0});;
-w2#setWordMult 2;;
-let l2 = (new tile {id = char_of_int 32; score = 0});;
-l2#setLetterMult 2;;
-let w3 = (new tile {id = char_of_int 32; score = 0});;
-w3#setWordMult 3;;
-let l3 = (new tile {id = char_of_int 32; score = 0});;
-l3#setLetterMult 3;;
 
-(*Common color for the background*)
-let grn = rgb 84 139 84;;
-
-(*FUNCTIONS USED THROUGHOUT THE BOARD CLASS:*)
-
-(*Finds the extrema of a list-- max or min passed in as f*)
-let listFind f lst = 
-	match lst with
-	|hd :: tl -> List.fold_left f hd tl
-	|[] -> failwith "Empty";;
-
-(*Examines the x,y values of coordinate list to find lines, returns a bool
- tuple*)
- let compare_all tup_lst = 
-	let compare lst =
-		match lst with
-		|[] -> true
-		|hd :: tl -> List.fold_left (fun acc x -> acc && x = hd) true tl in 
-	let xs, ys = List.split tup_lst in
-	(compare xs, compare ys);;
-
+(*FUNCTION USED THROUGHOUT THE BOARD CLASS:*)
 let inRange x l m = 
 	x >= l && x <= m;;
 
@@ -48,6 +20,8 @@ class board (players: int) (ais:int) =
 	val mutable layout = Array.make_matrix 15 15 blank
 	(*A shuffled set of tiles-- see word.ml*)
 	val mutable drawPile = shuffle fullSet
+	(*Common color for the background*)
+	val grn = rgb 84 139 84
 
 	(*PLAYER VARIABLES*)
 	(*Each entry .(n) corresponds to the quanitity for the n+1th player*)
@@ -111,6 +85,14 @@ class board (players: int) (ais:int) =
 
     (*A special screen we enter when 'h' is pressed*)
 	method drawHelp () = 
+		let w2 = (new tile {id = char_of_int 32; score = 0}) in 
+		w2#setWordMult 2;
+		let l2 = (new tile {id = char_of_int 32; score = 0}) in 
+		l2#setLetterMult 2;
+		let w3 = (new tile {id = char_of_int 32; score = 0}) in
+		w3#setWordMult 3;
+		let l3 = (new tile {id = char_of_int 32; score = 0}) in
+		l3#setLetterMult 3;
 		this#drawSetting ();
 		l2#draw 1 3;
 		l3#draw 1 5;
@@ -144,7 +126,6 @@ class board (players: int) (ais:int) =
 		done
 
 	method restoreSpecials () = 
-		let blank = new tile {id = char_of_int 32; score = 0} in
 		let w2 = (new tile {id = char_of_int 32; score = 0}) in
 		w2#setWordMult 2;
 		let l2 = (new tile {id = char_of_int 32; score = 0}) in
@@ -488,6 +469,20 @@ class board (players: int) (ais:int) =
 
 	(*Checks if a play (including tangents) is valid, updating turnScore*)
 	method is_valid () = 
+	  (*Finds the extrema of a list-- max or min passed in as f*)
+	  let listFind f lst = 
+		match lst with
+		|hd :: tl -> List.fold_left f hd tl
+		|[] -> failwith "Empty" in 
+	  (*Examines the x,y values of coordinate list to find lines, returns a
+	  bool tuple*)
+	  let compare_all tup_lst = 
+			let compare lst =
+				match lst with
+				|[] -> true
+				|hd :: tl -> List.fold_left (fun acc x -> acc && x = hd) true tl in 
+	  let xs, ys = List.split tup_lst in
+	  (compare xs, compare ys) in
 	  let xs, ys = List.split play in
 	  match xs, ys with 
 	  	|[], _ 
