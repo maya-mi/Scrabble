@@ -367,9 +367,9 @@ class board (players: int) (ais:int) =
 				let y = mouse_y / length - 2 in
 				if (inRange x 0 14 && inRange y 0 14 && layout.(x).(y)#isBlank) then 
 					(let wm = layout.(x).(y)#getWordMult in 
-					if wm <> 1 then hands.(turn).(savedQ)#setWordMult wm;
+					hands.(turn).(savedQ)#setWordMult wm;
 					let lm = layout.(x).(y)#getLetterMult in 
-					if lm <> 1 then hands.(turn).(savedQ)#setLetterMult lm;
+					hands.(turn).(savedQ)#setLetterMult lm;
 					layout.(x).(y) <- hands.(turn).(savedQ);
 					hands.(turn).(savedQ) <- blank;
 					play <- (x, y):: play;
@@ -559,7 +559,7 @@ class board (players: int) (ais:int) =
 	method pass () = 
 	 	if passes = players then 
 	 		(this#reset (); this#endGame (this#findWinner ()))
-	 	else (this#reset (); this#advanceTurn ())
+	 	else this#reset ()
 
 
 	method keyParse k = 
@@ -574,7 +574,7 @@ class board (players: int) (ais:int) =
 	  	  this#advanceTurn ())
 	    else if k = 'd' then dumping <- true
 	 	else if k = 'p' then (
-	 		this#pass ();)
+	 		this#pass (); this#advanceTurn ())
 	 	else if k = 'x' then raise Exit
 	 	
 
