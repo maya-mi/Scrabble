@@ -236,6 +236,10 @@ class board (players: int) (ais:int) =
         let rec placeTiles (isHor : bool) (forward : bool) =*)
 
 	(*AI FUNCTIONS*)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6fc6deef5f34a290f1aa188307ba695212295945
     method break (point : int) (input : int list) (acc : int list) : (int list) * (int list) =
       match input with
       | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
