@@ -558,7 +558,7 @@ class board (players: int) (ais:int) =
 		passes <- passes + 1; 
 	 	if passes = players then 
 	 		(this#reset (); this#endGame (this#findWinner ()))
-	 	else (this#reset (); this#advanceTurn ())
+	 	else this#reset ()
 
 
 	method keyParse k = 
@@ -573,7 +573,7 @@ class board (players: int) (ais:int) =
 	  	  this#advanceTurn ())
 	    else if k = 'd' then dumping <- true
 	 	else if k = 'p' then (
-	 		this#pass ();)
+	 		this#pass (); this#advanceTurn ())
 	 	else if k = 'x' then raise Exit
 	 	
 
