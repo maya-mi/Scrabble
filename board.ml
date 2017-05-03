@@ -247,7 +247,7 @@ class board (players: int) (ais:int) =
       | [] -> failwith "unexpected 7 behavior"
 
 
-	method playAI posHand =
+	method playAI () =
 	  this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
 	  draw_string "AI THINKING";
@@ -276,11 +276,11 @@ class board (players: int) (ais:int) =
               | h :: t -> 
                 if x1 >= 0 && x1 <= 14 && y1 >= 0 && y1 <= 14 then begin
                   if layout.(x1).(y1)#isBlank then begin
-          	        curPlay := (h, posHand.(h), (x1, y1)) :: !curPlay;
-                    if xv = 1 then begin curWord := !curWord @ [posHand.(h)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
-                    else if xv = -1 then begin curWord := posHand.(h) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
-                    else if yv = 1 then begin curWord := posHand.(h) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
-                    else begin curWord := !curWord @ [posHand.(h)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+          	        curPlay := (h, hands.(turn).(h), (x1, y1)) :: !curPlay;
+                    if xv = 1 then begin curWord := !curWord @ [hands.(turn).(h)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+                    else if xv = -1 then begin curWord := hands.(turn).(h) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+                    else if yv = 1 then begin curWord := hands.(turn).(h) :: !curWord; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
+                    else begin curWord := !curWord @ [hands.(turn).(h)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) t end
                   end
                   else begin
                     if xv = 1 then begin curWord := !curWord @ [layout.(x1).(y1)]; placeTiles (xv, yv) (x1 + xv, y1 + yv) indexes end
@@ -300,22 +300,24 @@ class board (players: int) (ais:int) =
                     placeTiles (-1, 0) (x, y) pre;
                   end
                   else begin
-              	    placeTiles (0, 1) (x, y + 1) pre;
-              	    placeTiles (0, -1) (x, y) post;
+              	    placeTiles (0, 1) (x, y) pre;
+              	    placeTiles (0, -1) (x, y - 1) post;
                   end);
                   if isWord (this#stripLetters !curWord) then begin
-                    List.iter (fun (_, t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play) !curPlay;
-                    List.iter (fun (_, t, (x1, y1)) -> 
-                    	let loc = layout.(x1).(y1) in
-						t#setWordMult loc#getWordMult;
-						t#setLetterMult loc#getLetterMult; 
+                    List.iter (fun (h, t, (x1, y1)) -> 
+                    	let wm = layout.(x1).(y1)#getWordMult in
+						t#setWordMult wm;
+						let lm = layout.(x1).(y1)#getLetterMult in 
+						t#setLetterMult lm; 
 						layout.(x1).(y1) <- t; 
+						hands.(turn).(h) <- blank;
 						play <- (x1, y1) :: play) !curPlay;
                     validPos <- true;
                     if this#is_valid () then begin
                       if turnScore > !bScore then begin bPlay := !curPlay; bScore := turnScore; end
                     end;
-                    (*List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1) <- blank) !curPlay;*)
+                    (*List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1)#setWordMult 1; layout.(x1).(y1)#setLetterMult 1; layout.(x1).(y1) <- blank) !curPlay;*)
+                    
                     this#reset ();
                     play <- [];
                   end
@@ -331,7 +333,7 @@ class board (players: int) (ais:int) =
           tryMove standL false;
         done;
         passes <- prePass;
-        List.iter (fun (h, t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play; posHand.(h) <- blank) !bPlay;
+        List.iter (fun (h, t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play; hands.(turn).(h) <- blank) !bPlay;
         if List.length play = 0 then this#pass ()
         else begin
           ignore (this#is_valid ());
@@ -545,7 +547,7 @@ class board (players: int) (ais:int) =
 	method advanceTurn () = 
 	 let rec help () = 
 		turn <- (turn + 1) mod (players);
-		if not reals.(turn) then (this#playAI hands.(turn); help ())
+		if not reals.(turn) then (this#playAI (); help ())
      in 
 	 help ()
 
