@@ -226,35 +226,35 @@ class board (players: int) (ais:int) =
 	  drawPile <- shuffle drawPile;
 	  List.iter (fun i -> hands.(turn).(i) <- this#pullTile ()) dumps;
 	  this#reset ();
-    
-    method valTile x y : bool = 
-      let validated = ref false in
-      if x - 1 >= 0 then begin if not layout.(x - 1).(y)#isBlank then validated := true end;
-      if x + 1 <= 14 then begin if not layout.(x + 1).(y)#isBlank then validated := true end;
-      if y + 1 <= 14 then begin if not layout.(x).(y + 1)#isBlank then validated := true end;
-      if y - 1 >= 0 then begin if not layout.(x).(y - 1)#isBlank then validated := true end;
-      (!validated && layout.(x).(y)#isBlank) || (x = 7 && y = 7 && layout.(7).(7)#isBlank)
 
-    (*
-    let bScore = ref 0 in
-      let bPlay = ref [] in
-      let tryMove (order : int list) : unit =
-        let curWord = ref [] in
-        let newOrder = this#cutPost7 order [] in
-        let pre, post = this#break 8 newOrder [] in
-        let rec placeTiles (isHor : bool) (forward : bool) =*)
 
 	(*AI FUNCTIONS*)
-
+    (* breaks a list into those elemnts which came before and those which came after break point *)
     method break (point : int) (input : int list) (acc : int list) : (int list) * (int list) =
       match input with
       | h :: t -> if h = point then (acc, t) else this#break point t (h :: acc)
       | [] -> failwith "False case"
 
+    (* cuts off all elements past and at 7 in a list *)
     method cutPost7 (somePerm : int list) (acc : int list) =
       match somePerm with
       | h :: t -> if h = 7 then acc else this#cutPost7 t (acc @ [h])
       | [] -> failwith "unexpected 7 behavior"
+
+
+    (* accumulates a word by moving along given velocity until off board or blank *)
+    method makeSide (xv, yv) (x, y) acc =
+      if x >= 0 && x <= 14 && y >= 0 && y >= 14 then begin
+        if layout.(x).(y)#isBlank then acc
+        else begin
+      	  if xv = 1 then this#makeSide (xv, yv) (xv + x, yv + y) (acc @ [layout.(x).(y)])
+          else if xv = - 1 then this#makeSide (xv, yv) (xv + x, yv + y) (layout.(x).(y) :: acc)
+          else if yv = -1 then this#makeSide (xv, yv) (xv + x, yv + y) (acc @ [layout.(x).(y)])
+          else this#makeSide (xv, yv) (xv + x, yv + y) (layout.(x).(y) :: acc);
+        end
+      end
+      else acc 
+
 
    (* determines the move for the ai to make *)
 	method playAI () =
@@ -268,6 +268,7 @@ class board (players: int) (ais:int) =
       let tryMove (order : int list) isHorizontal : unit =
         (* word accumulated along main axis *)
         let curWord = ref [] in
+        let sideWord = ref [] in
         let curPlay = ref [] in
         (* cuts off permutation at 7, determines length of play *)
         let newOrder = this#cutPost7 order [] in
@@ -313,24 +314,32 @@ class board (players: int) (ais:int) =
               for y = 0 to 14 do
                 curWord := [];
                 curPlay := [];
+                sideWord := [];
                 (* validating if adjacent to played tile *)
                 if (this#validating x y && layout.(x).(y)#isBlank) then begin
                   (if isHorizontal then begin
                   	(* places tile after start with post, positive x velocity *)
+                  	(* also accumulating perpendicular word *)
                     placeTiles (1, 0) (x + 1, y) post;
+                    sideWord := this#makeSide (0, 1) (x, y) [];
                     (* pre, negative x velocity *)
                     placeTiles (-1, 0) (x, y) pre;
+                    sideWord := this#makeSide (0, -1) (x, y - 1) !sideWord;
                   end
                   else begin
                   	(* same, except in the y *)
               	    placeTiles (0, -1) (x, y) pre;
+              	    sideWord := this#makeSide (1, 0) (x, y) [];
               	    placeTiles (0, 1) (x, y + 1) post;
+              	    sideWord := this#makeSide (-1, 0) (x - 1, y) !sideWord;
                   end);
-                  (* a bare minimum is that word along main axis must be word *)
-                  if isWord (this#stripLetters !curWord) then begin
+                  (* a bare minimum is that word along main axis must be word, 
+                  and that word perpendicualr from main tile is *)
+                  if isWord (this#stripLetters !curWord) && 
+                  (isWord (this#stripLetters !curWord) || List.length !curWord < 2) then begin
+                  	print (this#stripLetters !sideWord);
                   	(* lays stored tiles onto board, adds relevent squares to play *)
 				    List.iter (fun (h, t, (x1, y1)) ->
-				      (*layout.(x1).(y1) <- new tile {id = hands.(turn).(h)#getid; score = hands.(turn).(h)#getscore};*)
 				      this#inheritscoring x y t;
 				      layout.(x1).(y1) <- hands.(turn).(h);
 					  play <- (x1, y1) :: play;
@@ -340,7 +349,8 @@ class board (players: int) (ais:int) =
                     if this#is_valid () then begin
                       if turnScore > !bScore then begin bPlay := !curPlay; bScore := turnScore; end
                     end;
-                    List.iter (fun (h, t, (x1, y1)) -> layout.(x1).(y1)<- blank; t#setLetterMult 1; t#setWordMult 1) !curPlay;
+                    List.iter (fun (h, t, (x1, y1)) -> layout.(x1).(y1)<- blank; 
+                      t#setLetterMult 1; t#setWordMult 1) !curPlay;
                     this#restoreSpecials ();
                     this#reset ();
                   end
@@ -358,14 +368,17 @@ class board (players: int) (ais:int) =
         done;
         (* resets board state *)
         this#reset ();
-        (* passes inadvertenly changed by  *)
+        (* passes inadvertenly changed by reset, so recall it *)
         passes <- prePass;
         validPos <- true;
+        (* iterating through, setting mult on tile to proper one when we place it *)
+        (* also blanks tile in hand, so on reset new tiles are drawn from bag *)
         List.iter (fun (h, t, (x1, y1)) -> this#inheritscoring x1 y1 t;
           layout.(x1).(y1) <- t; play <- (x1, y1) :: play; hands.(turn).(h) <- blank) !bPlay;
+        (* we have no play, so must pass *)
         if List.length play = 0 then this#pass ()
         else begin
-          (if this#is_valid () then () else failwith "fuck");
+          (if this#is_valid () then () else failwith "unexpected behavior");
           this#refresh ()
         end
 
@@ -586,15 +599,6 @@ class board (players: int) (ais:int) =
 	 help ()
 
 
-	method test () =
-	  layout.(7).(7) <- new tile {id = 'a'; score = 2};
-	  for i = 0 to 14 do
-	    for x = 0 to 14 do
-	      if this#valTile i x then begin print_int i; print_string " "; print_int x; print_endline ""; end
-	    done;
-	  done;
-
-
 	method pass () = 
 	    passes <- passes + 1;
 	 	if passes = players then 
@@ -633,6 +637,5 @@ class board (players: int) (ais:int) =
 
 	end ;;
 
-(*let a = new board 1 1 in a#test () ;;*)
 
 	
