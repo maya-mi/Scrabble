@@ -250,6 +250,7 @@ class board (players: int) (ais:int) =
 	method playAI posHand =
 	  this#draw ();
 	  moveto (cFRAMESIZE - 2 * length) (cFRAMESIZE - 2 * length);
+	  let prePass = passes in
       let bScore = ref 0 in
       let bPlay = ref [] in
       let tryMove (order : int list) isHorizontal : unit =
@@ -293,7 +294,6 @@ class board (players: int) (ais:int) =
                 curWord := [];
                 curPlay := [];
                 if (this#validating x y && layout.(x).(y)#isBlank) then begin
-                (*print_int x; print_string " "; print_int y; print_endline "";*)
                   (if isHorizontal then begin
                     placeTiles (1, 0) (x + 1, y) post;
                     placeTiles (-1, 0) (x, y) pre;
@@ -303,22 +303,18 @@ class board (players: int) (ais:int) =
               	    placeTiles (0, -1) (x, y) post;
                   end);
                   if isWord (this#stripLetters !curWord) then begin
-<<<<<<< HEAD
                     List.iter (fun (_, t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play) !curPlay;
-=======
-              	    print_int (List.length !curWord);
-                    List.iter (fun (t, (x1, y1)) -> 
+                    List.iter (fun (_, t, (x1, y1)) -> 
                     	let loc = layout.(x1).(y1) in
 						t#setWordMult loc#getWordMult;
 						t#setLetterMult loc#getLetterMult; 
 						layout.(x1).(y1) <- t; 
 						play <- (x1, y1) :: play) !curPlay;
->>>>>>> a67d19de71074cbc3cc3cffaaf7fae6534b29452
                     validPos <- true;
                     if this#is_valid () then begin
                       if turnScore > !bScore then begin bPlay := !curPlay; bScore := turnScore; end
                     end;
-                    List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1) <- blank) !curPlay;
+                    (*List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1) <- blank) !curPlay;*)
                     this#reset ();
                     play <- [];
                   end
@@ -328,11 +324,12 @@ class board (players: int) (ais:int) =
           end
         end
         in
-        for _i = 0 to 15000 do
+        for _i = 0 to 20000 do
           standL <- shuffle standL;
           tryMove standL true;
           tryMove standL false;
         done;
+        passes <- prePass;
         List.iter (fun (h, t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play; posHand.(h) <- blank) !bPlay;
         if List.length play = 0 then this#pass ()
         else begin
@@ -473,7 +470,6 @@ class board (players: int) (ais:int) =
 			(let wrd = ref [] in 
 			let perp = ref true in 
 			for i = (listFind min ys) to (listFind max ys) do
-			    print_int 10000;
 				wrd := layout.(x).(i) :: !wrd;
 				if List.mem (x, i) play then 
 					(perp := !perp && this#horNormal x i;)
@@ -563,6 +559,7 @@ class board (players: int) (ais:int) =
 
 
 	method pass () = 
+	    passes <- passes + 1;
 	 	if passes = players then 
 	 		(this#reset (); this#endGame (this#findWinner ()))
 	 	else this#reset ()
