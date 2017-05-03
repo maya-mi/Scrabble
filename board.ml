@@ -144,6 +144,15 @@ class board (players: int) (ais:int) =
 		done
 
 	method restoreSpecials () = 
+		let blank = new tile {id = char_of_int 32; score = 0} in
+		let w2 = (new tile {id = char_of_int 32; score = 0}) in
+		w2#setWordMult 2;
+		let l2 = (new tile {id = char_of_int 32; score = 0}) in
+		l2#setLetterMult 2;
+		let w3 = (new tile {id = char_of_int 32; score = 0}) in 
+		w3#setWordMult 3;
+		let l3 = (new tile {id = char_of_int 32; score = 0}) in
+		l3#setLetterMult 3;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w2) w2s;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- l2) l2s;
 		List.iter (fun (x, y) -> if layout.(x).(y)#isBlank then layout.(x).(y) <- w3) w3s;
@@ -304,20 +313,18 @@ class board (players: int) (ais:int) =
               	    placeTiles (0, -1) (x, y - 1) post;
                   end);
                   if isWord (this#stripLetters !curWord) then begin
-                    List.iter (fun (h, t, (x1, y1)) -> 
-                    	let wm = layout.(x1).(y1)#getWordMult in
-						t#setWordMult wm;
-						let lm = layout.(x1).(y1)#getLetterMult in 
-						t#setLetterMult lm; 
-						layout.(x1).(y1) <- t; 
-						hands.(turn).(h) <- blank;
-						play <- (x1, y1) :: play) !curPlay;
+				    List.iter (fun (h, t, (x1, y1)) ->
+				      layout.(x1).(y1) <- new tile {id = hands.(turn).(h)#getid; score = hands.(turn).(h)#getscore};
+					  play <- (x1, y1) :: play;
+					  ) !curPlay;
                     validPos <- true;
                     if this#is_valid () then begin
                       if turnScore > !bScore then begin bPlay := !curPlay; bScore := turnScore; end
                     end;
-                    (*List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1)#setWordMult 1; layout.(x1).(y1)#setLetterMult 1; layout.(x1).(y1) <- blank) !curPlay;*)
-                    
+                  (*)  List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1)#setWordMult 1; layout.(x1).(y1)#setLetterMult 1; layout.(x1).(y1) <- blank) !curPlay;*)
+                    List.iter (fun (_, _, (x1, y1)) -> layout.(x1).(y1)#setProp ' ' 1) !curPlay;
+                    turnScore <- 0;
+                    this#restoreSpecials ();
                     this#reset ();
                     play <- [];
                   end
@@ -332,16 +339,23 @@ class board (players: int) (ais:int) =
           tryMove standL true;
           tryMove standL false;
         done;
+        this#reset ();
         passes <- prePass;
-        List.iter (fun (h, t, (x1, y1)) -> layout.(x1).(y1) <- t; play <- (x1, y1) :: play; hands.(turn).(h) <- blank) !bPlay;
+        validPos <- true;
+        List.iter (fun (h, t, (x1, y1)) -> this#inheritscoring x1 y1 t; layout.(x1).(y1) <- t; play <- (x1, y1) :: play; hands.(turn).(h) <- blank) !bPlay;
         if List.length play = 0 then this#pass ()
         else begin
-          ignore (this#is_valid ());
+          (if this#is_valid () then () else failwith "fuck");
           this#refresh ()
         end
 
 
 
+    method inheritscoring x y t = 
+      let wm = layout.(x).(y)#getWordMult in
+      t#setWordMult wm;
+      let lm = layout.(x).(y)#getLetterMult in
+      t#setLetterMult lm
 
 
 	(*A square is validating if it has at least one live neighbor; a single 
@@ -540,6 +554,7 @@ class board (players: int) (ais:int) =
 			hands.(turn).(i)#unclick;
 			hands.(turn).(i)#setWordMult 1;
 			hands.(turn).(i)#setLetterMult 1;
+			this#restoreSpecials ();
 		done	
 
 
